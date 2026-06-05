@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>UnoVision Barcode Scanner</title>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;700&display=swap');
 
@@ -30,7 +30,6 @@
     overflow-x: hidden;
   }
 
-  /* ── HEADER ── */
   header {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
@@ -43,460 +42,155 @@
     z-index: 100;
   }
 
-  .logo {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
+  .logo { display: flex; align-items: center; gap: 10px; }
   .logo-icon {
     width: 36px; height: 36px;
     background: linear-gradient(135deg, var(--accent), var(--accent2));
     border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px;
-    flex-shrink: 0;
+    font-size: 18px; flex-shrink: 0;
   }
+  .logo-text { display: flex; flex-direction: column; line-height: 1.2; }
+  .logo-main { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; letter-spacing: 1.5px; color: var(--accent); }
+  .logo-sub  { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 400; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
 
-  .logo-text {
-    display: flex;
-    flex-direction: column;
-    line-height: 1.2;
-  }
+  .count-badge { background: var(--accent); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
 
-  .logo-main {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 1.5px;
-    color: var(--accent);
-  }
-
-  .logo-sub {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
-    font-weight: 400;
-    letter-spacing: 2px;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-
-  .count-badge {
-    background: var(--accent);
-    color: var(--bg);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    font-weight: 700;
-    padding: 4px 10px;
-    border-radius: 20px;
-  }
-
-  .container { padding: 16px; max-width: 480px; margin: 0 auto; }
+  .container { padding: 14px; max-width: 480px; margin: 0 auto; }
 
   /* ── SCANNER ── */
-  .scanner-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    margin-bottom: 16px;
-  }
+  .scanner-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 14px; }
 
-  .scanner-header {
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-  }
+  .scanner-header { padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+  .scanner-title { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+  .scanner-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); transition: all 0.3s; flex-shrink: 0; }
+  .status-dot.scanning { background: var(--accent2); box-shadow: 0 0 8px var(--accent2); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
-  .scanner-title {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: var(--muted);
-    text-transform: uppercase;
-  }
-
-  .scanner-status {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    color: var(--muted);
-  }
-
-  .status-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--muted);
-    transition: all 0.3s;
-    flex-shrink: 0;
-  }
-  .status-dot.scanning {
-    background: var(--accent2);
-    box-shadow: 0 0 8px var(--accent2);
-    animation: pulse 1s infinite;
-  }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
-
-  /* html5-qrcode 뷰어 */
-  #qr-reader {
+  /* 카메라 뷰 */
+  #cam-wrap {
+    position: relative;
     width: 100%;
     background: #000;
     display: none;
-    position: relative;
+    overflow: hidden;
   }
-  #qr-reader.visible { display: block; }
-  #qr-reader video {
-    width: 100% !important;
-    border-radius: 0 !important;
-    display: block;
-  }
-  #qr-reader__dashboard { display: none !important; }
-  #qr-reader__scan_region { background: #000; }
-  #qr-reader__scan_region img { display: none !important; }
+  #cam-wrap.visible { display: block; }
 
-  /* 스캔 가이드 오버레이 */
-  .scan-overlay-ui {
+  #cam-video {
+    width: 100%;
+    display: block;
+    object-fit: cover;
+  }
+
+  /* 가이드 오버레이 */
+  .overlay {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 
-  .scan-box {
-    position: relative;
-    width: 70%;
-    height: 38%;
-    border: none;
-  }
-
-  .scan-box::before, .scan-box::after,
-  .scan-box .c3, .scan-box .c4 {
-    content: '';
+  /* 어두운 마스크 + 중앙 투명 구멍 */
+  .mask-top, .mask-bottom, .mask-left, .mask-right {
     position: absolute;
-    width: 20px; height: 20px;
-    border-color: var(--accent);
-    border-style: solid;
+    background: rgba(0,0,0,0.52);
   }
-  .scan-box::before { top:0; left:0; border-width: 3px 0 0 3px; }
-  .scan-box::after  { top:0; right:0; border-width: 3px 3px 0 0; }
-  .scan-box .c3     { bottom:0; left:0; border-width: 0 0 3px 3px; }
-  .scan-box .c4     { bottom:0; right:0; border-width: 0 3px 3px 0; }
+  .mask-top    { top:0; left:0; right:0; height: var(--mt); }
+  .mask-bottom { bottom:0; left:0; right:0; height: var(--mb); }
+  .mask-left   { top: var(--mt); bottom: var(--mb); left:0; width: var(--ml); }
+  .mask-right  { top: var(--mt); bottom: var(--mb); right:0; width: var(--mr); }
 
-  .scan-laser {
+  /* 코너 */
+  .corner { position: absolute; width: 22px; height: 22px; }
+  .corner.tl { top: calc(var(--mt) - 2px); left: calc(var(--ml) - 2px); border-top: 3px solid var(--accent); border-left: 3px solid var(--accent); }
+  .corner.tr { top: calc(var(--mt) - 2px); right: calc(var(--mr) - 2px); border-top: 3px solid var(--accent); border-right: 3px solid var(--accent); }
+  .corner.bl { bottom: calc(var(--mb) - 2px); left: calc(var(--ml) - 2px); border-bottom: 3px solid var(--accent); border-left: 3px solid var(--accent); }
+  .corner.br { bottom: calc(var(--mb) - 2px); right: calc(var(--mr) - 2px); border-bottom: 3px solid var(--accent); border-right: 3px solid var(--accent); }
+
+  /* 레이저 라인 */
+  .laser {
     position: absolute;
-    left: 0; right: 0;
+    left: var(--ml); right: var(--mr);
     height: 2px;
-    background: linear-gradient(90deg, transparent 0%, var(--accent) 30%, #fff 50%, var(--accent) 70%, transparent 100%);
-    box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent);
-    animation: laserMove 2s ease-in-out infinite;
-    top: 0;
+    background: linear-gradient(90deg, transparent, var(--accent) 25%, #fff 50%, var(--accent) 75%, transparent);
+    box-shadow: 0 0 10px var(--accent);
+    top: var(--mt);
+    animation: laserAnim 2s ease-in-out infinite;
   }
-  @keyframes laserMove {
-    0%   { top: 5%;  opacity: 1; }
-    50%  { top: 95%; opacity: 0.8; }
-    100% { top: 5%;  opacity: 1; }
-  }
-
-  .camera-placeholder {
-    padding: 40px 20px;
-    text-align: center;
-  }
-  .cam-icon { font-size: 52px; margin-bottom: 14px; opacity: 0.25; }
-  .cam-hint { font-size: 13px; color: var(--muted); line-height: 1.8; }
-  .format-tags {
-    margin-top: 12px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    justify-content: center;
-  }
-  .fmt-tag {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    padding: 3px 8px;
+  @keyframes laserAnim {
+    0%   { transform: translateY(0); opacity:1; }
+    50%  { transform: translateY(var(--scan-h)); opacity:0.75; }
+    100% { transform: translateY(0); opacity:1; }
   }
 
-  /* 마지막 스캔 결과 */
-  .last-scan-bar {
-    margin: 0 12px 12px;
-    padding: 10px 14px;
-    background: rgba(0,255,157,0.07);
-    border: 1px solid rgba(0,255,157,0.25);
-    border-radius: 10px;
-    display: none;
-    align-items: center;
-    gap: 8px;
-  }
-  .last-scan-bar.visible { display: flex; }
-  .last-scan-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    color: var(--accent2);
-    white-space: nowrap;
-    text-transform: uppercase;
-  }
-  .last-scan-code {
-    flex: 1;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    color: var(--text);
-    word-break: break-all;
-  }
+  /* 플레이스홀더 */
+  .cam-ph { padding: 36px 20px; text-align: center; }
+  .cam-ph .icon { font-size: 50px; opacity: 0.22; margin-bottom: 12px; }
+  .cam-ph .hint { font-size: 13px; color: var(--muted); line-height: 1.8; }
+  .fmt-wrap { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; }
+  .fmt { background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); padding: 2px 7px; }
 
-  /* 스캔 버튼 */
+  /* 마지막 인식 */
+  .last-bar { margin: 0 12px 10px; padding: 9px 13px; background: rgba(0,255,157,.07); border: 1px solid rgba(0,255,157,.22); border-radius: 9px; display:none; align-items:center; gap:8px; }
+  .last-bar.on { display:flex; }
+  .last-lbl { font-size:10px; font-weight:700; letter-spacing:1px; color:var(--accent2); white-space:nowrap; text-transform:uppercase; }
+  .last-code { flex:1; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text); word-break:break-all; }
+
+  /* 버튼 */
   .btn-scan {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: calc(100% - 24px);
-    margin: 0 12px 12px;
-    padding: 14px;
-    background: linear-gradient(135deg, var(--accent) 0%, #0099cc 100%);
-    border: none;
-    border-radius: 12px;
-    color: var(--bg);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    letter-spacing: 0.3px;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    width:calc(100% - 24px); margin: 0 12px 12px;
+    padding:14px; background: linear-gradient(135deg,var(--accent),#0099cc);
+    border:none; border-radius:12px; color:var(--bg);
+    font-family:'Noto Sans KR',sans-serif; font-size:15px; font-weight:700;
+    cursor:pointer; transition:all .2s;
   }
-  .btn-scan:active { transform: scale(0.97); }
-  .btn-scan.stop { background: linear-gradient(135deg, var(--warn), #cc2200); }
+  .btn-scan:active { transform:scale(.97); }
+  .btn-scan.stop { background: linear-gradient(135deg,var(--warn),#cc2200); }
 
-  /* ── MANUAL ── */
-  .manual-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 14px;
-    margin-bottom: 16px;
-  }
+  /* ── 수동 입력 ── */
+  .manual-section { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:13px; margin-bottom:14px; }
+  .sec-lbl { font-size:11px; font-weight:700; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:10px; }
+  .input-row { display:flex; gap:8px; }
+  .barcode-input { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:11px 13px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:14px; outline:none; transition:border-color .2s; }
+  .barcode-input:focus { border-color:var(--accent); }
+  .barcode-input::placeholder { color:var(--muted); }
+  .btn-add { background:var(--accent2); border:none; border-radius:10px; color:var(--bg); font-weight:700; font-size:22px; width:46px; cursor:pointer; transition:all .15s; }
+  .btn-add:active { transform:scale(.9); }
 
-  .section-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 10px;
-  }
+  /* ── 토스트 ── */
+  .toast { position:fixed; top:74px; left:50%; transform:translateX(-50%) translateY(-14px); background:var(--accent2); color:var(--bg); font-weight:700; font-size:13px; padding:9px 18px; border-radius:24px; opacity:0; transition:all .25s; z-index:999; white-space:nowrap; pointer-events:none; max-width:90vw; overflow:hidden; text-overflow:ellipsis; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.dup  { background:var(--warn); }
 
-  .input-row { display: flex; gap: 8px; }
+  /* ── 목록 ── */
+  .list-section { background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; margin-bottom:14px; }
+  .list-header { padding:11px 14px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); }
+  .list-actions { display:flex; gap:6px; }
+  .btn-sm { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--muted); font-size:11px; font-weight:700; letter-spacing:1px; padding:5px 10px; cursor:pointer; transition:all .15s; }
+  .btn-sm:active { transform:scale(.94); color:var(--warn); }
+  .search-input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:9px; padding:9px 13px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; outline:none; margin-bottom:4px; transition:border-color .2s; }
+  .search-input:focus { border-color:var(--accent); }
+  .search-input::placeholder { color:var(--muted); }
+  .empty-st { padding:34px 20px; text-align:center; color:var(--muted); font-size:13px; line-height:2; }
+  .empty-ic { font-size:32px; opacity:.22; margin-bottom:8px; }
+  .bc-list { padding:7px; }
+  .bc-item { display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid var(--border); border-radius:9px; padding:10px 12px; margin-bottom:5px; animation:slideIn .2s ease; transition:border-color .3s; }
+  .bc-item.new { border-color:var(--accent2); }
+  @keyframes slideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
+  .i-num { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); min-width:26px; text-align:right; }
+  .i-info { flex:1; min-width:0; }
+  .i-code { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text); word-break:break-all; line-height:1.3; }
+  .i-meta { font-size:10px; color:var(--muted); margin-top:2px; }
+  .btn-del { background:none; border:none; color:var(--muted); font-size:15px; cursor:pointer; padding:5px; border-radius:6px; line-height:1; flex-shrink:0; }
+  .btn-del:active { color:var(--warn); }
 
-  .barcode-input {
-    flex: 1;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 14px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.2s;
-  }
-  .barcode-input:focus { border-color: var(--accent); }
-  .barcode-input::placeholder { color: var(--muted); }
-
-  .btn-add {
-    background: var(--accent2);
-    border: none;
-    border-radius: 10px;
-    color: var(--bg);
-    font-weight: 700;
-    font-size: 22px;
-    width: 46px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-add:active { transform: scale(0.9); }
-
-  /* ── TOAST ── */
-  .toast {
-    position: fixed;
-    top: 76px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-16px);
-    background: var(--accent2);
-    color: var(--bg);
-    font-weight: 700;
-    font-size: 13px;
-    padding: 9px 18px;
-    border-radius: 24px;
-    opacity: 0;
-    transition: all 0.28s;
-    z-index: 999;
-    white-space: nowrap;
-    pointer-events: none;
-    max-width: 90vw;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .toast.dup  { background: var(--warn); }
-
-  /* ── LIST ── */
-  .list-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    overflow: hidden;
-    margin-bottom: 16px;
-  }
-
-  .list-header {
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .list-actions { display: flex; gap: 6px; }
-
-  .btn-small {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--muted);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    padding: 5px 10px;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-small:active { transform: scale(0.94); color: var(--warn); }
-
-  .search-input {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 14px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    outline: none;
-    margin-bottom: 4px;
-    transition: border-color 0.2s;
-  }
-  .search-input:focus { border-color: var(--accent); }
-  .search-input::placeholder { color: var(--muted); }
-
-  .empty-state {
-    padding: 36px 20px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 13px;
-    line-height: 2;
-  }
-  .empty-icon { font-size: 34px; margin-bottom: 8px; opacity: 0.25; }
-
-  .barcode-list { padding: 8px; }
-
-  .barcode-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 11px 12px;
-    margin-bottom: 5px;
-    animation: slideIn 0.22s ease;
-    transition: border-color 0.3s;
-  }
-  .barcode-item.new-item { border-color: var(--accent2); }
-
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateY(-6px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .item-num {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    min-width: 26px;
-    text-align: right;
-  }
-
-  .item-info { flex: 1; min-width: 0; }
-
-  .item-barcode {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    color: var(--text);
-    word-break: break-all;
-    line-height: 1.3;
-  }
-
-  .item-meta {
-    font-size: 10px;
-    color: var(--muted);
-    margin-top: 2px;
-  }
-
-  .btn-delete {
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-size: 15px;
-    cursor: pointer;
-    padding: 5px;
-    border-radius: 6px;
-    transition: all 0.15s;
-    line-height: 1;
-    flex-shrink: 0;
-  }
-  .btn-delete:active { color: var(--warn); }
-
-  /* ── EXPORT ── */
-  .export-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 14px;
-    margin-bottom: 32px;
-  }
-
-  .export-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .btn-export {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 12px;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'Noto Sans KR', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-export:active { transform: scale(0.95); border-color: var(--accent); }
+  /* ── 내보내기 ── */
+  .export-section { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:13px; margin-bottom:28px; }
+  .exp-btns { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .btn-exp { display:flex; align-items:center; justify-content:center; gap:6px; padding:12px; background:var(--surface2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-family:'Noto Sans KR',sans-serif; font-size:13px; font-weight:700; cursor:pointer; transition:all .15s; }
+  .btn-exp:active { transform:scale(.95); border-color:var(--accent); }
 </style>
 </head>
 <body>
@@ -514,7 +208,6 @@
 
 <div class="container">
 
-  <!-- Scanner -->
   <div class="scanner-section">
     <div class="scanner-header">
       <span class="scanner-title">카메라 스캐너</span>
@@ -524,83 +217,77 @@
       </div>
     </div>
 
-    <div id="qr-reader">
-      <div class="scan-overlay-ui">
-        <div class="scan-box">
-          <div class="c3"></div><div class="c4"></div>
-          <div class="scan-laser"></div>
-        </div>
+    <!-- 카메라 뷰 -->
+    <div id="cam-wrap">
+      <video id="cam-video" autoplay muted playsinline></video>
+      <canvas id="cam-canvas" style="display:none"></canvas>
+      <div class="overlay" id="overlay">
+        <div class="mask-top"></div>
+        <div class="mask-bottom"></div>
+        <div class="mask-left"></div>
+        <div class="mask-right"></div>
+        <div class="corner tl"></div>
+        <div class="corner tr"></div>
+        <div class="corner bl"></div>
+        <div class="corner br"></div>
+        <div class="laser"></div>
       </div>
     </div>
 
-    <div class="camera-placeholder" id="cameraPlaceholder">
-      <div class="cam-icon">📷</div>
-      <div class="cam-hint">
-        카메라 시작 버튼을 누르고<br>바코드를 가이드 프레임에 맞춰주세요
-      </div>
-      <div class="format-tags">
-        <span class="fmt-tag">QR Code</span>
-        <span class="fmt-tag">EAN-13</span>
-        <span class="fmt-tag">EAN-8</span>
-        <span class="fmt-tag">Code 128</span>
-        <span class="fmt-tag">Code 39</span>
-        <span class="fmt-tag">UPC-A</span>
-        <span class="fmt-tag">UPC-E</span>
-        <span class="fmt-tag">Data Matrix</span>
-        <span class="fmt-tag">ITF</span>
-        <span class="fmt-tag">Aztec</span>
-        <span class="fmt-tag">PDF417</span>
+    <!-- 플레이스홀더 -->
+    <div class="cam-ph" id="camPh">
+      <div class="icon">📷</div>
+      <div class="hint">카메라 시작 버튼을 누르고<br>바코드를 가이드 프레임에 맞춰주세요</div>
+      <div class="fmt-wrap">
+        <span class="fmt">QR Code</span><span class="fmt">EAN-13</span><span class="fmt">EAN-8</span>
+        <span class="fmt">Code 128</span><span class="fmt">Code 39</span><span class="fmt">Code 93</span>
+        <span class="fmt">UPC-A/E</span><span class="fmt">Data Matrix</span><span class="fmt">PDF417</span>
+        <span class="fmt">Aztec</span><span class="fmt">ITF</span><span class="fmt">Codabar</span>
       </div>
     </div>
 
-    <div class="last-scan-bar" id="lastScanBar">
-      <span class="last-scan-label">LAST</span>
-      <span class="last-scan-code" id="lastScanCode">—</span>
+    <div class="last-bar" id="lastBar">
+      <span class="last-lbl">LAST</span>
+      <span class="last-code" id="lastCode">—</span>
     </div>
 
-    <button class="btn-scan" id="scanBtn" onclick="toggleScanner()">
-      📷 카메라 시작
-    </button>
+    <button class="btn-scan" id="scanBtn" onclick="toggleScanner()">📷 카메라 시작</button>
   </div>
 
-  <!-- Manual input -->
+  <!-- 수동 입력 -->
   <div class="manual-section">
-    <div class="section-label">수동 입력</div>
+    <div class="sec-lbl">수동 입력</div>
     <div class="input-row">
-      <input class="barcode-input" id="manualInput" type="text"
-        placeholder="바코드 번호 직접 입력..."
+      <input class="barcode-input" id="manualInput" type="text" placeholder="바코드 번호 직접 입력..."
         inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false"
-        onkeydown="if(event.key==='Enter') addManual()">
+        onkeydown="if(event.key==='Enter')addManual()">
       <button class="btn-add" onclick="addManual()">+</button>
     </div>
   </div>
 
-  <!-- List -->
+  <!-- 목록 -->
   <div class="list-section">
     <div class="list-header">
-      <span class="section-label" style="margin:0">스캔 목록</span>
+      <span class="sec-lbl" style="margin:0">스캔 목록</span>
       <div class="list-actions">
-        <button class="btn-small" onclick="toggleSearch()">🔍 검색</button>
-        <button class="btn-small" onclick="clearAll()">전체삭제</button>
+        <button class="btn-sm" onclick="toggleSearch()">🔍 검색</button>
+        <button class="btn-sm" onclick="clearAll()">전체삭제</button>
       </div>
     </div>
-    <div style="padding:8px 8px 0;display:none" id="searchWrapper">
+    <div style="padding:7px 7px 0;display:none" id="searchWrap">
       <input class="search-input" id="searchInput" placeholder="바코드 검색..." oninput="renderList()" autocomplete="off">
     </div>
     <div id="listContainer">
-      <div class="empty-state">
-        <div class="empty-icon">📋</div>
-        스캔된 바코드가 없습니다<br>카메라로 스캔하거나 직접 입력하세요
-      </div>
+      <div class="empty-st"><div class="empty-ic">📋</div>스캔된 바코드가 없습니다<br>카메라로 스캔하거나 직접 입력하세요</div>
     </div>
   </div>
 
-  <!-- Export -->
+  <!-- 내보내기 -->
   <div class="export-section">
-    <div class="section-label">내보내기</div>
-    <div class="export-buttons">
-      <button class="btn-export" onclick="exportCSV()">📊 CSV 저장</button>
-      <button class="btn-export" onclick="exportTXT()">📄 TXT 저장</button>
+    <div class="sec-lbl">내보내기</div>
+    <div class="exp-btns">
+      <button class="btn-exp" onclick="exportCSV()">📊 CSV 저장</button>
+      <button class="btn-exp" onclick="exportTXT()">📄 TXT 저장</button>
     </div>
   </div>
 
@@ -609,45 +296,255 @@
 <div class="toast" id="toast"></div>
 
 <script>
-let barcodes = JSON.parse(localStorage.getItem('wh_barcodes') || '[]');
-let scanning = false;
-let html5QrCode = null;
-let lastCode = '';
-let lastCodeTime = 0;
-let searchVisible = false;
+// ── 데이터 ─────────────────────────────────────────────────────
+let barcodes   = JSON.parse(localStorage.getItem('wh_barcodes') || '[]');
+let scanning   = false;
+let stream     = null;
+let rafId      = null;
+let zxingReader = null;
+let barcodeDetector = null;   // 네이티브 API
+let lastCode   = '';
+let lastCodeTs = 0;
+let searchOpen = false;
 
-function save() { localStorage.setItem('wh_barcodes', JSON.stringify(barcodes)); }
-
-function showToast(msg, isDup = false) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show' + (isDup ? ' dup' : '');
-  clearTimeout(t._t);
-  t._t = setTimeout(() => t.className = 'toast', 2200);
+// ZXing 멀티포맷 리더 초기화
+function initZXing() {
+  const hints = new Map();
+  const formats = [
+    ZXing.BarcodeFormat.QR_CODE,
+    ZXing.BarcodeFormat.DATA_MATRIX,
+    ZXing.BarcodeFormat.AZTEC,
+    ZXing.BarcodeFormat.PDF_417,
+    ZXing.BarcodeFormat.EAN_13,
+    ZXing.BarcodeFormat.EAN_8,
+    ZXing.BarcodeFormat.CODE_128,
+    ZXing.BarcodeFormat.CODE_39,
+    ZXing.BarcodeFormat.CODE_93,
+    ZXing.BarcodeFormat.UPC_A,
+    ZXing.BarcodeFormat.UPC_E,
+    ZXing.BarcodeFormat.ITF,
+    ZXing.BarcodeFormat.CODABAR,
+    ZXing.BarcodeFormat.MAXICODE,
+  ];
+  hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
+  hints.set(ZXing.DecodeHintType.TRY_HARDER, true);       // 더 열심히 찾기
+  hints.set(ZXing.DecodeHintType.ALSO_INVERTED, true);    // 반전 바코드도 인식
+  zxingReader = new ZXing.MultiFormatReader();
+  zxingReader.setHints(hints);
 }
 
-function addBarcode(code) {
-  const s = code.trim();
-  if (!s) return;
-  const now = Date.now();
-  if (s === lastCode && now - lastCodeTime < 3000) return;
-  lastCode = s;
-  lastCodeTime = now;
+// 네이티브 BarcodeDetector (크롬 안드로이드)
+function initNativeDetector() {
+  if ('BarcodeDetector' in window) {
+    try {
+      barcodeDetector = new BarcodeDetector({
+        formats: [
+          'qr_code','data_matrix','aztec','pdf417',
+          'ean_13','ean_8','code_128','code_39','code_93',
+          'upc_a','upc_e','itf','codabar'
+        ]
+      });
+    } catch(e) {
+      barcodeDetector = null;
+    }
+  }
+}
 
-  // 마지막 스캔 표시
-  document.getElementById('lastScanCode').textContent = s;
-  document.getElementById('lastScanBar').classList.add('visible');
+// ── 오버레이 치수 계산 ──────────────────────────────────────────
+function updateOverlayVars() {
+  const wrap = document.getElementById('cam-wrap');
+  const w = wrap.offsetWidth;
+  const h = wrap.offsetHeight || wrap.clientHeight;
+  if (!h) return;
+
+  const bw = Math.round(w * 0.78);
+  const bh = Math.round(h * 0.44);
+  const ml = Math.round((w - bw) / 2);
+  const mt = Math.round((h - bh) / 2);
+
+  const root = document.documentElement;
+  root.style.setProperty('--mt', mt + 'px');
+  root.style.setProperty('--mb', (h - mt - bh) + 'px');
+  root.style.setProperty('--ml', ml + 'px');
+  root.style.setProperty('--mr', (w - ml - bw) + 'px');
+  root.style.setProperty('--scan-h', bh + 'px');
+}
+
+// ── 스캔 루프 ───────────────────────────────────────────────────
+function scanLoop() {
+  if (!scanning) return;
+
+  const video  = document.getElementById('cam-video');
+  const canvas = document.getElementById('cam-canvas');
+
+  if (video.readyState < 2) { rafId = requestAnimationFrame(scanLoop); return; }
+
+  const vw = video.videoWidth;
+  const vh = video.videoHeight;
+  if (!vw || !vh) { rafId = requestAnimationFrame(scanLoop); return; }
+
+  // 오버레이 치수 반영
+  updateOverlayVars();
+
+  // 캔버스를 영상 크기로
+  canvas.width  = vw;
+  canvas.height = vh;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0, vw, vh);
+
+  // 네이티브 BarcodeDetector 우선 시도
+  if (barcodeDetector) {
+    barcodeDetector.detect(canvas).then(results => {
+      if (results && results.length > 0) {
+        onDetected(results[0].rawValue);
+      } else {
+        zxingDecode(canvas, vw, vh, ctx);
+      }
+    }).catch(() => {
+      zxingDecode(canvas, vw, vh, ctx);
+    });
+  } else {
+    zxingDecode(canvas, vw, vh, ctx);
+  }
+
+  // 15fps
+  setTimeout(() => { rafId = requestAnimationFrame(scanLoop); }, 66);
+}
+
+function zxingDecode(canvas, vw, vh, ctx) {
+  try {
+    // 전체 프레임 시도
+    const imgData = ctx.getImageData(0, 0, vw, vh);
+    const lum = new ZXing.RGBLuminanceSource(imgData.data, vw, vh);
+    const bmp = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(lum));
+    const result = zxingReader.decode(bmp);
+    if (result) onDetected(result.getText());
+  } catch(e) {
+    // 인식 실패는 정상 (매 프레임 실패 가능)
+  }
+}
+
+function onDetected(code) {
+  if (!code) return;
+  const now = Date.now();
+  if (code === lastCode && now - lastCodeTs < 2500) return;
+  lastCode   = code;
+  lastCodeTs = now;
+  addBarcode(code);
+}
+
+// ── 카메라 시작/중지 ────────────────────────────────────────────
+async function toggleScanner() {
+  scanning ? stopScanner() : await startScanner();
+}
+
+async function startScanner() {
+  const btn   = document.getElementById('scanBtn');
+  const dot   = document.getElementById('statusDot');
+  const stTxt = document.getElementById('statusText');
+  const ph    = document.getElementById('camPh');
+  const wrap  = document.getElementById('cam-wrap');
+  const video = document.getElementById('cam-video');
+
+  try {
+    // 갤럭시 노트20 최적화: 연속 오토포커스 + 높은 해상도
+    const constraints = {
+      video: {
+        facingMode: { ideal: 'environment' },
+        width:  { ideal: 1920, min: 640 },
+        height: { ideal: 1080, min: 480 },
+        frameRate: { ideal: 30, min: 15 },
+        focusMode: 'continuous',
+        advanced: [
+          { focusMode: 'continuous' },
+          { zoom: 1.0 }
+        ]
+      },
+      audio: false
+    };
+
+    stream = await navigator.mediaDevices.getUserMedia(constraints);
+    video.srcObject = stream;
+    await video.play();
+
+    // 비디오 트랙에 연속 오토포커스 강제 적용
+    const track = stream.getVideoTracks()[0];
+    if (track) {
+      const caps = track.getCapabilities ? track.getCapabilities() : {};
+      const settings = {};
+      if (caps.focusMode && caps.focusMode.includes('continuous')) {
+        settings.focusMode = 'continuous';
+      }
+      if (caps.exposureMode && caps.exposureMode.includes('continuous')) {
+        settings.exposureMode = 'continuous';
+      }
+      if (caps.whiteBalanceMode && caps.whiteBalanceMode.includes('continuous')) {
+        settings.whiteBalanceMode = 'continuous';
+      }
+      if (Object.keys(settings).length > 0) {
+        track.applyConstraints({ advanced: [settings] }).catch(() => {});
+      }
+    }
+
+    // 높이 맞추기
+    video.addEventListener('loadedmetadata', () => {
+      const ratio = video.videoHeight / video.videoWidth;
+      wrap.style.height = (wrap.offsetWidth * ratio) + 'px';
+      updateOverlayVars();
+    }, { once: true });
+
+    scanning = true;
+    wrap.classList.add('visible');
+    ph.style.display = 'none';
+    btn.innerHTML = '⏹ 스캔 중지';
+    btn.classList.add('stop');
+    dot.className = 'status-dot scanning';
+    stTxt.textContent = '스캔중';
+
+    rafId = requestAnimationFrame(scanLoop);
+
+  } catch(err) {
+    console.error(err);
+    showToast('❌ 카메라 오류: ' + err.message, true);
+  }
+}
+
+function stopScanner() {
+  scanning = false;
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+
+  document.getElementById('cam-wrap').classList.remove('visible');
+  document.getElementById('camPh').style.display = 'block';
+  document.getElementById('scanBtn').innerHTML = '📷 카메라 시작';
+  document.getElementById('scanBtn').classList.remove('stop');
+  document.getElementById('statusDot').className = 'status-dot';
+  document.getElementById('statusText').textContent = '대기중';
+
+  const video = document.getElementById('cam-video');
+  video.srcObject = null;
+  video.load();
+}
+
+// ── 바코드 데이터 관리 ──────────────────────────────────────────
+function save() { localStorage.setItem('wh_barcodes', JSON.stringify(barcodes)); }
+
+function addBarcode(code) {
+  const s = (code || '').trim();
+  if (!s) return;
+
+  document.getElementById('lastCode').textContent = s;
+  document.getElementById('lastBar').classList.add('on');
 
   if (barcodes.find(b => b.code === s)) {
     showToast('⚠️ 이미 등록됨: ' + s, true);
     return;
   }
 
+  const now  = Date.now();
   const time = new Date().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
   barcodes.unshift({ code: s, time, id: now });
-  save();
-  renderList();
-  updateCount();
+  save(); renderList(); updateCount();
   showToast('✓ 등록: ' + s);
   if (navigator.vibrate) navigator.vibrate([60, 30, 60]);
 }
@@ -679,181 +576,54 @@ function renderList() {
   const list = q ? barcodes.filter(b => b.code.toLowerCase().includes(q)) : barcodes;
 
   if (!list.length) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div>${q ? '검색 결과 없음' : '스캔된 바코드가 없습니다<br>카메라로 스캔하거나 직접 입력하세요'}</div>`;
+    container.innerHTML = `<div class="empty-st"><div class="empty-ic">📋</div>${q ? '검색 결과 없음' : '스캔된 바코드가 없습니다<br>카메라로 스캔하거나 직접 입력하세요'}</div>`;
     return;
   }
 
   const total = barcodes.length;
-  container.innerHTML = '<div class="barcode-list">' + list.map(b => {
+  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  container.innerHTML = '<div class="bc-list">' + list.map(b => {
     const num = total - barcodes.indexOf(b);
     const isNew = Date.now() - b.id < 4000;
     const codeHtml = q
-      ? b.code.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi'),
-          m => `<span style="color:var(--accent);background:rgba(0,212,255,0.12);border-radius:3px">${m}</span>`)
+      ? b.code.replace(new RegExp(esc(q), 'gi'), m => `<span style="color:var(--accent);background:rgba(0,212,255,.12);border-radius:3px">${m}</span>`)
       : b.code;
-    return `<div class="barcode-item${isNew?' new-item':''}">
-      <span class="item-num">#${num}</span>
-      <div class="item-info">
-        <div class="item-barcode">${codeHtml}</div>
-        <div class="item-meta">${b.time}</div>
+    return `<div class="bc-item${isNew?' new':''}">
+      <span class="i-num">#${num}</span>
+      <div class="i-info">
+        <div class="i-code">${codeHtml}</div>
+        <div class="i-meta">${b.time}</div>
       </div>
-      <button class="btn-delete" onclick="deleteItem(${b.id})">✕</button>
+      <button class="btn-del" onclick="deleteItem(${b.id})">✕</button>
     </div>`;
   }).join('') + '</div>';
 }
 
 function toggleSearch() {
-  searchVisible = !searchVisible;
-  const w = document.getElementById('searchWrapper');
-  w.style.display = searchVisible ? 'block' : 'none';
-  if (searchVisible) document.getElementById('searchInput').focus();
+  searchOpen = !searchOpen;
+  const w = document.getElementById('searchWrap');
+  w.style.display = searchOpen ? 'block' : 'none';
+  if (searchOpen) document.getElementById('searchInput').focus();
   else { document.getElementById('searchInput').value = ''; renderList(); }
 }
 
-// ── 스캐너 ──────────────────────────────────────
-async function toggleScanner() {
-  scanning ? await stopScanner() : await startScanner();
+function showToast(msg, isDup = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (isDup ? ' dup' : '');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className = 'toast', 2200);
 }
 
-async function startScanner() {
-  const btn      = document.getElementById('scanBtn');
-  const dot      = document.getElementById('statusDot');
-  const statTxt  = document.getElementById('statusText');
-  const ph       = document.getElementById('cameraPlaceholder');
-  const qrDiv    = document.getElementById('qr-reader');
-
-  try {
-    html5QrCode = new Html5Qrcode("qr-reader", { verbose: false });
-
-    // 갤럭시 노트20 최적화: 고해상도 + 연속 오토포커스
-    const config = {
-      fps: 15,
-      qrbox: (w, h) => ({ width: Math.round(w * 0.72), height: Math.round(h * 0.42) }),
-      aspectRatio: 1.6,
-      videoConstraints: {
-        facingMode: { exact: "environment" },
-        width:  { ideal: 1920 },
-        height: { ideal: 1080 },
-        focusMode: "continuous",          // 연속 오토포커스
-        advanced: [{ focusMode: "continuous" }]
-      },
-      // 지원 형식: 1D + 2D 전부
-      formatsToSupport: [
-        Html5QrcodeSupportedFormats.QR_CODE,
-        Html5QrcodeSupportedFormats.DATA_MATRIX,
-        Html5QrcodeSupportedFormats.AZTEC,
-        Html5QrcodeSupportedFormats.PDF_417,
-        Html5QrcodeSupportedFormats.EAN_13,
-        Html5QrcodeSupportedFormats.EAN_8,
-        Html5QrcodeSupportedFormats.CODE_128,
-        Html5QrcodeSupportedFormats.CODE_39,
-        Html5QrcodeSupportedFormats.CODE_93,
-        Html5QrcodeSupportedFormats.UPC_A,
-        Html5QrcodeSupportedFormats.UPC_E,
-        Html5QrcodeSupportedFormats.ITF,
-        Html5QrcodeSupportedFormats.CODABAR,
-        Html5QrcodeSupportedFormats.MAXICODE,
-      ],
-      // 크롬 네이티브 BarcodeDetector API 우선 사용 (갤럭시 크롬에서 오토포커스 훨씬 좋음)
-      experimentalFeatures: {
-        useBarCodeDetectorIfSupported: true
-      }
-    };
-
-    await html5QrCode.start(
-      { facingMode: { exact: "environment" } },
-      config,
-      (decodedText) => addBarcode(decodedText),
-      () => {}
-    );
-
-    // 카메라 스트림에 오토포커스 직접 적용
-    applyAutoFocus();
-
-    scanning = true;
-    qrDiv.classList.add('visible');
-    ph.style.display = 'none';
-    btn.innerHTML = '⏹ 스캔 중지';
-    btn.classList.add('stop');
-    dot.className = 'status-dot scanning';
-    statTxt.textContent = '스캔중';
-
-  } catch (err) {
-    console.error(err);
-    // exact facingMode 실패 시 fallback
-    try {
-      await html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: { width: 250, height: 160 },
-          formatsToSupport: [
-            Html5QrcodeSupportedFormats.QR_CODE,
-            Html5QrcodeSupportedFormats.EAN_13,
-            Html5QrcodeSupportedFormats.CODE_128,
-            Html5QrcodeSupportedFormats.EAN_8,
-            Html5QrcodeSupportedFormats.UPC_A,
-          ],
-          experimentalFeatures: { useBarCodeDetectorIfSupported: true }
-        },
-        (decodedText) => addBarcode(decodedText),
-        () => {}
-      );
-      scanning = true;
-      qrDiv.classList.add('visible');
-      ph.style.display = 'none';
-      btn.innerHTML = '⏹ 스캔 중지';
-      btn.classList.add('stop');
-      dot.className = 'status-dot scanning';
-      statTxt.textContent = '스캔중';
-    } catch(e2) {
-      showToast('❌ 카메라 접근 실패', true);
-    }
-  }
-}
-
-// 비디오 트랙에 직접 오토포커스 설정
-function applyAutoFocus() {
-  setTimeout(() => {
-    const video = document.querySelector('#qr-reader video');
-    if (!video) return;
-    const stream = video.srcObject;
-    if (!stream) return;
-    const track = stream.getVideoTracks()[0];
-    if (!track) return;
-    const caps = track.getCapabilities ? track.getCapabilities() : {};
-    if (caps.focusMode && caps.focusMode.includes('continuous')) {
-      track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] })
-        .catch(() => {});
-    }
-  }, 800);
-}
-
-async function stopScanner() {
-  try {
-    if (html5QrCode) {
-      await html5QrCode.stop();
-      html5QrCode.clear();
-      html5QrCode = null;
-    }
-  } catch(e) {}
-
-  scanning = false;
-  document.getElementById('qr-reader').classList.remove('visible');
-  document.getElementById('cameraPlaceholder').style.display = 'block';
-  document.getElementById('scanBtn').innerHTML = '📷 카메라 시작';
-  document.getElementById('scanBtn').classList.remove('stop');
-  document.getElementById('statusDot').className = 'status-dot';
-  document.getElementById('statusText').textContent = '대기중';
-}
-
-// Export
+// ── 내보내기 ────────────────────────────────────────────────────
 function exportCSV() {
   if (!barcodes.length) { showToast('내보낼 데이터 없음', true); return; }
   const rows = barcodes.map((b, i) => `${barcodes.length-i},"${b.code}","${b.time}"`).join('\n');
-  dl(new Blob(['\uFEFF바코드번호,코드,스캔시간\n' + rows], {type:'text/csv;charset=utf-8;'}), 'unovision_' + ds() + '.csv');
+  dl(new Blob(['\uFEFF번호,바코드,시간\n' + rows], {type:'text/csv;charset=utf-8;'}), 'unovision_' + ds() + '.csv');
 }
 function exportTXT() {
   if (!barcodes.length) { showToast('내보낼 데이터 없음', true); return; }
-  dl(new Blob([barcodes.map(b=>b.code).join('\n')], {type:'text/plain;charset=utf-8;'}), 'unovision_' + ds() + '.txt');
+  dl(new Blob([barcodes.map(b => b.code).join('\n')], {type:'text/plain;charset=utf-8;'}), 'unovision_' + ds() + '.txt');
 }
 function dl(blob, name) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
@@ -864,8 +634,12 @@ function ds() {
   return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
 }
 
+// ── 초기화 ──────────────────────────────────────────────────────
 document.addEventListener('visibilitychange', () => { if (document.hidden && scanning) stopScanner(); });
+window.addEventListener('resize', () => { if (scanning) updateOverlayVars(); });
 
+initZXing();
+initNativeDetector();
 renderList();
 updateCount();
 </script>
