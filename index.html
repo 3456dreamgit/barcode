@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>창고 바코드 스캐너</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Noto+Sans+KR:wght@300;400;700&display=swap');
 
@@ -18,7 +18,6 @@
     --warn: #ff4444;
     --text: #e0eeff;
     --muted: #4a6080;
-    --scan-line: rgba(0, 212, 255, 0.6);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -31,7 +30,6 @@
     overflow-x: hidden;
   }
 
-  /* Header */
   header {
     background: var(--surface);
     border-bottom: 1px solid var(--border);
@@ -42,7 +40,6 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    backdrop-filter: blur(12px);
   }
 
   .logo {
@@ -72,13 +69,10 @@
     font-weight: 700;
     padding: 4px 10px;
     border-radius: 20px;
-    letter-spacing: 1px;
   }
 
-  /* Main layout */
   .container { padding: 16px; max-width: 480px; margin: 0 auto; }
 
-  /* Scanner section */
   .scanner-section {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -109,99 +103,56 @@
     background: var(--muted);
     transition: all 0.3s;
   }
-  .status-dot.active { background: var(--accent2); box-shadow: 0 0 8px var(--accent2); animation: pulse 1.5s infinite; }
-  .status-dot.scanning { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 0.8s infinite; }
-
+  .status-dot.scanning {
+    background: var(--accent);
+    box-shadow: 0 0 8px var(--accent);
+    animation: pulse 0.8s infinite;
+  }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
-  #camera-view {
-    position: relative;
+  /* html5-qrcode가 생성하는 뷰어 영역 */
+  #qr-reader {
     width: 100%;
-    aspect-ratio: 4/3;
     background: #000;
-    overflow: hidden;
     display: none;
   }
+  #qr-reader.visible { display: block; }
 
-  #camera-view.visible { display: block; }
-
-  #camera-view video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  /* html5-qrcode 내부 스타일 덮어쓰기 */
+  #qr-reader video {
+    width: 100% !important;
+    border-radius: 0 !important;
+  }
+  #qr-reader img { display: none !important; }
+  #qr-reader__scan_region {
+    background: #000;
+  }
+  #qr-reader__dashboard {
+    display: none !important;
   }
 
-  #camera-view canvas { display: none !important; }
-
-  /* Scan overlay */
-  .scan-overlay {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
-
-  .scan-frame {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    width: 75%;
-    height: 40%;
-    border: none;
-  }
-
-  .scan-frame::before, .scan-frame::after,
-  .scan-frame .corner-bl, .scan-frame .corner-br {
-    content: '';
-    position: absolute;
-    width: 22px; height: 22px;
-    border-color: var(--accent);
-    border-style: solid;
-  }
-  .scan-frame::before { top: 0; left: 0; border-width: 3px 0 0 3px; }
-  .scan-frame::after { top: 0; right: 0; border-width: 3px 3px 0 0; }
-  .scan-frame .corner-bl { bottom: 0; left: 0; border-width: 0 0 3px 3px; }
-  .scan-frame .corner-br { bottom: 0; right: 0; border-width: 0 3px 3px 0; }
-
-  .scan-line-anim {
-    position: absolute;
-    left: 5%; right: 5%;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    top: 0;
-    animation: scanMove 2s ease-in-out infinite;
-    box-shadow: 0 0 8px var(--accent);
-  }
-
-  @keyframes scanMove {
-    0% { top: 10%; opacity: 1; }
-    50% { top: 90%; opacity: 0.8; }
-    100% { top: 10%; opacity: 1; }
-  }
-
-  .dim-overlay {
-    position: absolute; inset: 0;
-    background: rgba(0,0,0,0.35);
-  }
-
-  /* Placeholder */
   .camera-placeholder {
     padding: 40px 20px;
     text-align: center;
   }
+  .cam-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.3; }
+  .cam-hint { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
-  .cam-icon {
-    font-size: 48px;
-    margin-bottom: 12px;
-    opacity: 0.3;
-  }
-
-  .cam-hint {
+  /* 마지막 스캔 결과 표시 */
+  .last-scan {
+    margin: 0 16px 12px;
+    padding: 10px 14px;
+    background: rgba(0, 255, 157, 0.08);
+    border: 1px solid rgba(0, 255, 157, 0.3);
+    border-radius: 10px;
+    font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
-    color: var(--muted);
-    line-height: 1.6;
+    color: var(--accent2);
+    display: none;
+    word-break: break-all;
   }
+  .last-scan.visible { display: block; }
 
-  /* Buttons */
   .btn-scan {
     display: flex;
     align-items: center;
@@ -219,16 +170,10 @@
     font-weight: 700;
     cursor: pointer;
     transition: all 0.2s;
-    letter-spacing: 0.5px;
   }
-
   .btn-scan:active { transform: scale(0.97); opacity: 0.85; }
+  .btn-scan.stop { background: linear-gradient(135deg, var(--warn), #cc2200); }
 
-  .btn-scan.stop {
-    background: linear-gradient(135deg, var(--warn), #cc2200);
-  }
-
-  /* Manual input */
   .manual-section {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -246,10 +191,7 @@
     margin-bottom: 12px;
   }
 
-  .input-row {
-    display: flex;
-    gap: 8px;
-  }
+  .input-row { display: flex; gap: 8px; }
 
   .barcode-input {
     flex: 1;
@@ -263,7 +205,6 @@
     outline: none;
     transition: border-color 0.2s;
   }
-
   .barcode-input:focus { border-color: var(--accent); }
   .barcode-input::placeholder { color: var(--muted); }
 
@@ -280,7 +221,6 @@
   }
   .btn-add:active { transform: scale(0.92); }
 
-  /* Toast */
   .toast {
     position: fixed;
     top: 80px;
@@ -301,7 +241,6 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   .toast.duplicate { background: var(--warn); }
 
-  /* List section */
   .list-section {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -318,10 +257,7 @@
     border-bottom: 1px solid var(--border);
   }
 
-  .list-actions {
-    display: flex;
-    gap: 8px;
-  }
+  .list-actions { display: flex; gap: 8px; }
 
   .btn-small {
     background: var(--surface2);
@@ -335,9 +271,8 @@
     cursor: pointer;
     transition: all 0.2s;
   }
-  .btn-small:hover { border-color: var(--accent); color: var(--accent); }
-  .btn-small.danger:hover { border-color: var(--warn); color: var(--warn); }
   .btn-small:active { transform: scale(0.95); }
+  .btn-small.danger:active { color: var(--warn); }
 
   .empty-state {
     padding: 40px 20px;
@@ -346,10 +281,8 @@
     font-size: 13px;
     line-height: 2;
   }
-
   .empty-icon { font-size: 36px; margin-bottom: 8px; opacity: 0.3; }
 
-  /* List items */
   .barcode-list { padding: 8px; }
 
   .barcode-item {
@@ -362,9 +295,7 @@
     padding: 12px 14px;
     margin-bottom: 6px;
     animation: slideIn 0.25s ease;
-    transition: border-color 0.2s;
   }
-
   .barcode-item.new-item { border-color: var(--accent2); }
 
   @keyframes slideIn {
@@ -383,7 +314,7 @@
   .item-barcode {
     flex: 1;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
+    font-size: 13px;
     color: var(--text);
     word-break: break-all;
   }
@@ -405,9 +336,7 @@
     transition: all 0.2s;
     line-height: 1;
   }
-  .btn-delete:hover { color: var(--warn); background: rgba(255,68,68,0.1); }
 
-  /* Export section */
   .export-section {
     background: var(--surface);
     border: 1px solid var(--border);
@@ -439,10 +368,7 @@
     transition: all 0.2s;
   }
   .btn-export:active { transform: scale(0.96); }
-  .btn-export.csv:hover { border-color: var(--accent2); color: var(--accent2); }
-  .btn-export.txt:hover { border-color: var(--accent); color: var(--accent); }
 
-  /* Search */
   .search-input {
     width: 100%;
     background: var(--surface2);
@@ -479,24 +405,19 @@
       <div class="status-dot" id="statusDot"></div>
     </div>
 
-    <div id="camera-view">
-      <div class="dim-overlay"></div>
-      <div class="scan-overlay">
-        <div class="scan-frame">
-          <div class="corner-bl"></div>
-          <div class="corner-br"></div>
-          <div class="scan-line-anim"></div>
-        </div>
-      </div>
-    </div>
+    <div id="qr-reader"></div>
 
     <div class="camera-placeholder" id="cameraPlaceholder">
       <div class="cam-icon">📷</div>
-      <div class="cam-hint">아래 버튼을 눌러 카메라를 켜고<br>바코드를 프레임 안에 맞춰주세요</div>
+      <div class="cam-hint">아래 버튼을 눌러 카메라를 켜고<br>바코드 / QR코드를 화면에 비춰주세요<br><br>
+        <small style="color:var(--muted);font-size:11px">QR, EAN, Code128, UPC 등 지원</small>
+      </div>
     </div>
 
+    <div class="last-scan" id="lastScan"></div>
+
     <button class="btn-scan" id="scanBtn" onclick="toggleScanner()">
-      <span>📷</span> 카메라 시작
+      📷 카메라 시작
     </button>
   </div>
 
@@ -504,7 +425,7 @@
   <div class="manual-section">
     <div class="section-label">수동 입력</div>
     <div class="input-row">
-      <input class="barcode-input" id="manualInput" type="text" placeholder="바코드 번호 직접 입력..." 
+      <input class="barcode-input" id="manualInput" type="text" placeholder="바코드 번호 직접 입력..."
         inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false"
         onkeydown="if(event.key==='Enter') addManual()">
       <button class="btn-add" onclick="addManual()">+</button>
@@ -520,11 +441,9 @@
         <button class="btn-small danger" onclick="clearAll()">전체 삭제</button>
       </div>
     </div>
-
-    <div style="padding: 8px 8px 0; display:none" id="searchWrapper">
+    <div style="padding:8px 8px 0;display:none" id="searchWrapper">
       <input class="search-input" id="searchInput" placeholder="바코드 검색..." oninput="renderList()" autocomplete="off">
     </div>
-
     <div id="listContainer">
       <div class="empty-state">
         <div class="empty-icon">📋</div>
@@ -537,20 +456,20 @@
   <div class="export-section">
     <div class="section-label">내보내기</div>
     <div class="export-buttons">
-      <button class="btn-export csv" onclick="exportCSV()">📊 CSV 저장</button>
-      <button class="btn-export txt" onclick="exportTXT()">📄 TXT 저장</button>
+      <button class="btn-export" onclick="exportCSV()">📊 CSV 저장</button>
+      <button class="btn-export" onclick="exportTXT()">📄 TXT 저장</button>
     </div>
   </div>
 
 </div>
 
-<!-- Toast -->
 <div class="toast" id="toast"></div>
 
 <script>
 let barcodes = JSON.parse(localStorage.getItem('wh_barcodes') || '[]');
 let scanning = false;
-let lastScanned = '';
+let html5QrCode = null;
+let lastScannedCode = '';
 let lastScannedTime = 0;
 let searchVisible = false;
 
@@ -563,7 +482,7 @@ function showToast(msg, isDuplicate = false) {
   t.textContent = msg;
   t.className = 'toast show' + (isDuplicate ? ' duplicate' : '');
   clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.className = 'toast', 2000);
+  t._timer = setTimeout(() => t.className = 'toast', 2200);
 }
 
 function addBarcode(code) {
@@ -571,12 +490,15 @@ function addBarcode(code) {
   if (!trimmed) return;
 
   const now = Date.now();
-  // 중복 방지 (2초 내 같은 코드)
-  if (trimmed === lastScanned && now - lastScannedTime < 2000) return;
-  lastScanned = trimmed;
+  if (trimmed === lastScannedCode && now - lastScannedTime < 3000) return;
+  lastScannedCode = trimmed;
   lastScannedTime = now;
 
-  // 중복 체크
+  // 마지막 스캔 표시
+  const lastScanEl = document.getElementById('lastScan');
+  lastScanEl.textContent = '✓ ' + trimmed;
+  lastScanEl.classList.add('visible');
+
   if (barcodes.find(b => b.code === trimmed)) {
     showToast('⚠️ 이미 등록된 바코드', true);
     return;
@@ -587,7 +509,8 @@ function addBarcode(code) {
   save();
   renderList();
   updateCount();
-  showToast('✓ ' + trimmed + ' 추가됨');
+  showToast('✓ 추가됨: ' + trimmed);
+  if (navigator.vibrate) navigator.vibrate(80);
 }
 
 function addManual() {
@@ -607,7 +530,7 @@ function deleteItem(id) {
 
 function clearAll() {
   if (barcodes.length === 0) return;
-  if (confirm(`${barcodes.length}개 항목을 모두 삭제할까요?`)) {
+  if (confirm(barcodes.length + '개 항목을 모두 삭제할까요?')) {
     barcodes = [];
     save();
     renderList();
@@ -625,34 +548,22 @@ function renderList() {
   const filtered = query ? barcodes.filter(b => b.code.toLowerCase().includes(query)) : barcodes;
 
   if (filtered.length === 0) {
-    container.innerHTML = `<div class="empty-state">
-      <div class="empty-icon">📋</div>
-      ${query ? '검색 결과 없음' : '스캔된 바코드가 없습니다<br>카메라로 스캔하거나 직접 입력하세요'}
-    </div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div>${query ? '검색 결과 없음' : '스캔된 바코드가 없습니다<br>카메라로 스캔하거나 직접 입력하세요'}</div>`;
     return;
   }
 
   const total = barcodes.length;
-  container.innerHTML = '<div class="barcode-list">' + filtered.map((b, i) => {
+  container.innerHTML = '<div class="barcode-list">' + filtered.map(b => {
     const num = total - barcodes.indexOf(b);
     const isNew = (Date.now() - b.id) < 3000;
+    const codeHtml = query ? b.code.replace(new RegExp(query, 'gi'), m => `<span style="color:var(--accent)">${m}</span>`) : b.code;
     return `<div class="barcode-item ${isNew ? 'new-item' : ''}">
       <span class="item-num">#${num}</span>
-      <span class="item-barcode">${highlight(b.code, query)}</span>
+      <span class="item-barcode">${codeHtml}</span>
       <span class="item-time">${b.time}</span>
       <button class="btn-delete" onclick="deleteItem(${b.id})">✕</button>
     </div>`;
   }).join('') + '</div>';
-}
-
-function highlight(text, query) {
-  if (!query) return text;
-  const idx = text.toLowerCase().indexOf(query);
-  if (idx === -1) return text;
-  return text.slice(0, idx) + 
-    `<span style="color:var(--accent);background:rgba(0,212,255,0.15);border-radius:3px;padding:0 2px">` +
-    text.slice(idx, idx + query.length) + `</span>` +
-    text.slice(idx + query.length);
 }
 
 function toggleSearch() {
@@ -663,126 +574,117 @@ function toggleSearch() {
   else { document.getElementById('searchInput').value = ''; renderList(); }
 }
 
-// Scanner
-function toggleScanner() {
-  scanning ? stopScanner() : startScanner();
+// ── 스캐너 ──────────────────────────────────────────
+async function toggleScanner() {
+  scanning ? await stopScanner() : await startScanner();
 }
 
-function startScanner() {
-  const view = document.getElementById('camera-view');
-  const placeholder = document.getElementById('cameraPlaceholder');
+async function startScanner() {
   const btn = document.getElementById('scanBtn');
   const dot = document.getElementById('statusDot');
+  const placeholder = document.getElementById('cameraPlaceholder');
+  const qrDiv = document.getElementById('qr-reader');
 
-  view.classList.add('visible');
-  placeholder.style.display = 'none';
-  btn.innerHTML = '<span>⏹</span> 스캔 중지';
-  btn.classList.add('stop');
-  dot.className = 'status-dot scanning';
-  scanning = true;
+  try {
+    html5QrCode = new Html5Qrcode("qr-reader");
 
-  Quagga.init({
-    inputStream: {
-      name: "Live",
-      type: "LiveStream",
-      target: view,
-      constraints: {
-        facingMode: "environment",
-        width: { ideal: 1280 },
-        height: { ideal: 720 },
+    const config = {
+      fps: 15,
+      qrbox: { width: 260, height: 180 },
+      aspectRatio: 1.5,
+      formatsToSupport: [
+        Html5QrcodeSupportedFormats.QR_CODE,
+        Html5QrcodeSupportedFormats.EAN_13,
+        Html5QrcodeSupportedFormats.EAN_8,
+        Html5QrcodeSupportedFormats.CODE_128,
+        Html5QrcodeSupportedFormats.CODE_39,
+        Html5QrcodeSupportedFormats.UPC_A,
+        Html5QrcodeSupportedFormats.UPC_E,
+        Html5QrcodeSupportedFormats.DATA_MATRIX,
+        Html5QrcodeSupportedFormats.ITF,
+      ],
+      experimentalFeatures: {
+        useBarCodeDetectorIfSupported: true  // 네이티브 BarcodeDetector API 사용 → 오토포커스 향상
+      }
+    };
+
+    await html5QrCode.start(
+      { facingMode: "environment" },
+      config,
+      (decodedText) => {
+        addBarcode(decodedText);
       },
-    },
-    locator: { patchSize: "medium", halfSample: true },
-    numOfWorkers: 2,
-    decoder: {
-      readers: [
-        "code_128_reader", "ean_reader", "ean_8_reader",
-        "code_39_reader", "code_39_vin_reader",
-        "codabar_reader", "upc_reader", "upc_e_reader",
-        "i2of5_reader", "2of5_reader", "code_93_reader"
-      ]
-    },
-    locate: true,
-  }, function(err) {
-    if (err) {
-      console.error(err);
-      showToast('❌ 카메라 접근 실패', true);
-      stopScanner();
-      return;
-    }
-    Quagga.start();
-  });
+      () => {} // 실패 콜백 무시
+    );
 
-  Quagga.onDetected(onDetected);
+    scanning = true;
+    qrDiv.classList.add('visible');
+    placeholder.style.display = 'none';
+    btn.innerHTML = '⏹ 스캔 중지';
+    btn.classList.add('stop');
+    dot.className = 'status-dot scanning';
+
+  } catch (err) {
+    console.error(err);
+    showToast('❌ 카메라 접근 실패: ' + err, true);
+  }
 }
 
-function stopScanner() {
-  Quagga.stop();
-  Quagga.offDetected(onDetected);
-  const view = document.getElementById('camera-view');
-  const placeholder = document.getElementById('cameraPlaceholder');
+async function stopScanner() {
   const btn = document.getElementById('scanBtn');
   const dot = document.getElementById('statusDot');
+  const placeholder = document.getElementById('cameraPlaceholder');
+  const qrDiv = document.getElementById('qr-reader');
 
-  view.classList.remove('visible');
-  placeholder.style.display = 'block';
-  btn.innerHTML = '<span>📷</span> 카메라 시작';
-  btn.classList.remove('stop');
-  dot.className = 'status-dot active';
+  try {
+    if (html5QrCode) {
+      await html5QrCode.stop();
+      html5QrCode.clear();
+      html5QrCode = null;
+    }
+  } catch(e) {}
+
   scanning = false;
-}
-
-let detectedBuffer = [];
-function onDetected(result) {
-  const code = result.codeResult.code;
-  detectedBuffer.push(code);
-  if (detectedBuffer.length > 5) detectedBuffer.shift();
-  const freq = detectedBuffer.filter(c => c === code).length;
-  if (freq >= 3) {
-    detectedBuffer = [];
-    addBarcode(code);
-    // 진동 피드백
-    if (navigator.vibrate) navigator.vibrate(80);
-  }
+  qrDiv.classList.remove('visible');
+  placeholder.style.display = 'block';
+  btn.innerHTML = '📷 카메라 시작';
+  btn.classList.remove('stop');
+  dot.className = 'status-dot';
 }
 
 // Export
 function exportCSV() {
-  if (barcodes.length === 0) { showToast('내보낼 데이터 없음', true); return; }
-  const header = 'No,바코드,스캔시간\n';
+  if (!barcodes.length) { showToast('내보낼 데이터 없음', true); return; }
   const rows = barcodes.map((b, i) => `${barcodes.length - i},"${b.code}","${b.time}"`).join('\n');
-  const blob = new Blob(['\uFEFF' + header + rows], { type: 'text/csv;charset=utf-8;' });
-  download(blob, `barcodes_${dateStr()}.csv`);
+  const blob = new Blob(['\uFEFF' + 'No,바코드,스캔시간\n' + rows], { type: 'text/csv;charset=utf-8;' });
+  dl(blob, 'barcodes_' + dateStr() + '.csv');
 }
 
 function exportTXT() {
-  if (barcodes.length === 0) { showToast('내보낼 데이터 없음', true); return; }
-  const lines = barcodes.map(b => b.code).join('\n');
-  const blob = new Blob([lines], { type: 'text/plain;charset=utf-8;' });
-  download(blob, `barcodes_${dateStr()}.txt`);
+  if (!barcodes.length) { showToast('내보낼 데이터 없음', true); return; }
+  const blob = new Blob([barcodes.map(b => b.code).join('\n')], { type: 'text/plain;charset=utf-8;' });
+  dl(blob, 'barcodes_' + dateStr() + '.txt');
 }
 
-function download(blob, filename) {
+function dl(blob, name) {
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = filename;
+  a.download = name;
   a.click();
   showToast('✓ 저장 완료');
 }
 
 function dateStr() {
   const d = new Date();
-  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}_${String(d.getHours()).padStart(2,'0')}${String(d.getMinutes()).padStart(2,'0')}`;
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
 }
 
-// Init
-renderList();
-updateCount();
-
-// Page hide = stop scanner
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && scanning) stopScanner();
 });
+
+renderList();
+updateCount();
 </script>
 </body>
 </html>
