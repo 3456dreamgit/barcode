@@ -93,6 +93,72 @@
   .btn-add { background:var(--accent2); border:none; border-radius:10px; color:var(--bg); font-weight:700; font-size:22px; width:46px; cursor:pointer; transition:all .15s; }
   .btn-add:active { transform:scale(.9); }
 
+  /* ── 거래처/매장/수량/단위 폼 ── */
+  .form-section { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px; margin-bottom:14px; }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .form-field { display: flex; flex-direction: column; gap: 6px; }
+  .form-field.full { grid-column: 1 / -1; }
+
+  .form-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .form-select, .form-input-sm {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 10px 10px;
+    color: var(--text);
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .form-select {
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a6080' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    padding-right: 30px;
+  }
+
+  .form-select:focus, .form-input-sm:focus { border-color: var(--accent); }
+
+  .form-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .btn-form {
+    padding: 13px;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Noto Sans KR', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-form:active { transform: scale(.96); }
+  .btn-form.in  { background: linear-gradient(135deg, var(--accent2), #00cc7a); color: var(--bg); }
+  .btn-form.ret { background: linear-gradient(135deg, var(--warn), #cc2200); color: var(--bg); }
+
   /* ── 마지막 인식 ── */
   .last-bar { margin: 12px 0 0; padding: 9px 13px; background: rgba(0,255,157,.07); border: 1px solid rgba(0,255,157,.22); border-radius: 9px; display:none; align-items:center; gap:8px; }
   .last-bar.on { display:flex; }
@@ -221,6 +287,60 @@
     </div>
   </div>
 
+  <!-- 거래처/매장/수량/단위 -->
+  <div class="form-section">
+    <div class="form-grid">
+      <div class="form-field">
+        <span class="form-label">거래처</span>
+        <select class="form-select" id="partnerSelect">
+          <option value="">선택하세요</option>
+          <option value="대한식품">대한식품</option>
+          <option value="한국유통">한국유통</option>
+          <option value="서울물류센터">서울물류센터</option>
+          <option value="동부상사">동부상사</option>
+          <option value="태양물산">태양물산</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <span class="form-label">매장명</span>
+        <select class="form-select" id="storeSelect">
+          <option value="">선택하세요</option>
+          <option value="강남점">강남점</option>
+          <option value="홍대점">홍대점</option>
+          <option value="인천점">인천점</option>
+          <option value="송도점">송도점</option>
+          <option value="본점창고">본점창고</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <span class="form-label">수량</span>
+        <select class="form-select" id="qtySelect">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="5">5</option>
+          <option value="10">10</option>
+          <option value="20">20</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <span class="form-label">단위</span>
+        <select class="form-select" id="unitSelect">
+          <option value="EA">EA (개)</option>
+          <option value="BOX">BOX (박스)</option>
+          <option value="SET">SET (세트)</option>
+          <option value="PACK">PACK (팩)</option>
+          <option value="KG">KG (킬로그램)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-btns">
+      <button class="btn-form in" onclick="openDevModal()">📥 입고</button>
+      <button class="btn-form ret" onclick="openDevModal()">↩️ 반품</button>
+    </div>
+  </div>
+
   <!-- 목록 -->
   <div class="list-section">
     <div class="list-header">
@@ -242,7 +362,7 @@
   <div class="menu-section">
     <div class="menu-btns">
       <button class="btn-menu in" onclick="openDevModal()"><span class="ic">📥</span>입고관리</button>
-      <button class="btn-menu out" onclick="openDevModal()"><span class="ic">📤</span>출고관리</button>
+      <button class="btn-menu out" onclick="openDevModal()"><span class="ic">↩️</span>반품관리</button>
       <button class="btn-menu stock" onclick="openDevModal()"><span class="ic">📊</span>재고관리</button>
     </div>
   </div>
@@ -281,27 +401,42 @@ function focusInput() {
 window.addEventListener('load', focusInput);
 
 // 어디를 클릭/터치해도 항상 입력창으로 포커스 복귀
+function isExemptTarget(el) {
+  return el.id === 'manualInput'
+    || el.tagName === 'BUTTON'
+    || el.tagName === 'INPUT'
+    || el.tagName === 'SELECT'
+    || el.tagName === 'OPTION';
+}
+
 document.addEventListener('mousedown', (e) => {
-  if (e.target.id !== 'manualInput' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
+  if (!isExemptTarget(e.target)) {
     setTimeout(focusInput, 0);
   }
 });
 document.addEventListener('touchstart', (e) => {
-  if (e.target.id !== 'manualInput' && e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT') {
+  if (!isExemptTarget(e.target)) {
     setTimeout(focusInput, 0);
   }
 });
 
-// 포커스가 빠지면 즉시 복귀 (단, 모달 열려있을 땐 제외)
-manualInput().addEventListener('blur', () => {
-  if (!document.getElementById('devModal').classList.contains('show')) {
-    setTimeout(focusInput, 10);
-  }
+// 포커스가 빠지면 즉시 복귀 (단, 모달이나 select/button 등으로 이동한 경우는 제외)
+manualInput().addEventListener('blur', (e) => {
+  const modalOpen = document.getElementById('devModal').classList.contains('show');
+  setTimeout(() => {
+    const active = document.activeElement;
+    if (!modalOpen && !isExemptTarget(active)) {
+      focusInput();
+    }
+  }, 10);
 });
 
 // 주기적으로 포커스 체크 (안전망)
 setInterval(() => {
-  if (!document.getElementById('devModal').classList.contains('show')) {
+  const modalOpen = document.getElementById('devModal').classList.contains('show');
+  const active = document.activeElement;
+  const activeIsExempt = active && isExemptTarget(active);
+  if (!modalOpen && !activeIsExempt) {
     focusInput();
   }
 }, 800);
