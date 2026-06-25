@@ -336,7 +336,7 @@
       </div>
     </div>
     <div class="form-btns">
-      <button class="btn-form in" onclick="openDevModal()">📥 입고</button>
+      <button class="btn-form in" onclick="saveInboundFile()">📥 입고</button>
       <button class="btn-form ret" onclick="openDevModal()">↩️ 반품</button>
     </div>
   </div>
@@ -566,6 +566,63 @@ function openDevModal() {
 }
 function closeDevModal() {
   document.getElementById('devModal').classList.remove('show');
+  focusInput();
+}
+
+// ── 입고 → unoBar.txt 저장 (덮어쓰기) ────────────────────────────
+// File System Access API 사용: 처음 한 번만 저장 위치를 사용자가 지정하고,
+// 이후엔 같은 파일 핸들을 재사용해 매번 지우고 새로 씀(=덮어쓰기 효과)
+let unoBarFileHandle = null;
+
+async function saveInboundFile() {
+  // 1) 입력값 수집
+  const partner = document.getElementById('partnerSelect').value;
+  const store   = document.getElementById('storeSelect').value;
+  const qty     = document.getElementById('qtySelect').value;
+  const unit    = document.getElementById('unitSelect').value;
+
+  if (!partner || !store) {
+    showToast('⚠️ 거래처/매장명을 선택하세요', true);
+    return;
+  }
+
+  // 2) 기록 내용 (구분자 ;)
+  const line = `${partner};${store};${qty};${unit};`;
+
+  // 3) File System Access API 지원 확인
+  if (!('showSaveFilePicker' in window)) {
+    showToast('❌ 이 브라우저는 파일 저장을 지원하지 않음', true);
+    return;
+  }
+
+  try {
+    // 처음 한 번만 파일 위치 선택창 띄움
+    if (!unoBarFileHandle) {
+      unoBarFileHandle = await window.showSaveFilePicker({
+        suggestedName: 'unoBar.txt',
+        types: [{ description: 'Text File', accept: { 'text/plain': ['.txt'] } }]
+      });
+    }
+
+    // 기존 내용 지우고 새로 쓰기 (덮어쓰기)
+    const writable = await unoBarFileHandle.createWritable();
+    await writable.write(line);
+    await writable.close();
+
+    showToast('✓ unoBar.txt 저장 완료');
+    if (navigator.vibrate) navigator.vibrate(60);
+
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      // 사용자가 저장 위치 선택을 취소한 경우
+      showToast('저장이 취소되었습니다', true);
+    } else {
+      console.error('파일 저장 오류:', err);
+      showToast('❌ 파일 저장 실패', true);
+      unoBarFileHandle = null; // 핸들이 깨졌을 수 있으니 초기화 후 재시도 유도
+    }
+  }
+
   focusInput();
 }
 
