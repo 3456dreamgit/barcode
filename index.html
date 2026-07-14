@@ -53,7 +53,7 @@
   .logo-main { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--accent); white-space: nowrap; }
   .logo-sub  { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 400; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
 
-  .count-badge { background: var(--accent); color: var(--bg); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 20px; }
+  .count-badge { display:none; }
 
   .container { padding: 14px; max-width: 480px; margin: 0 auto; }
 
@@ -171,27 +171,6 @@
   .toast.dup  { background:var(--warn); }
 
   /* ── 목록 ── */
-  .list-section { background:var(--surface); border:1px solid var(--border); border-radius:16px; overflow:hidden; margin-bottom:14px; }
-  .list-header { padding:11px 14px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); }
-  .list-actions { display:flex; gap:6px; }
-  .btn-sm { background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--muted); font-size:11px; font-weight:700; letter-spacing:1px; padding:5px 10px; cursor:pointer; transition:all .15s; }
-  .btn-sm:active { transform:scale(.94); color:var(--warn); }
-  .search-input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:9px; padding:9px 13px; color:var(--text); font-family:'JetBrains Mono',monospace; font-size:13px; outline:none; margin-bottom:4px; transition:border-color .2s; }
-  .search-input:focus { border-color:var(--accent); }
-  .search-input::placeholder { color:var(--muted); }
-  .empty-st { padding:34px 20px; text-align:center; color:var(--muted); font-size:13px; line-height:2; }
-  .empty-ic { font-size:32px; opacity:.22; margin-bottom:8px; }
-  .bc-list { padding:7px; }
-  .bc-item { display:flex; align-items:center; gap:10px; background:var(--surface2); border:1px solid var(--border); border-radius:9px; padding:10px 12px; margin-bottom:5px; animation:slideIn .2s ease; transition:border-color .3s; }
-  .bc-item.new { border-color:var(--accent2); }
-  @keyframes slideIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:translateY(0)} }
-  .i-num { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted); min-width:26px; text-align:right; }
-  .i-info { flex:1; min-width:0; }
-  .i-code { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text); word-break:break-all; line-height:1.3; }
-  .i-meta { font-size:10px; color:var(--muted); margin-top:2px; }
-  .btn-del { background:none; border:none; color:var(--muted); font-size:15px; cursor:pointer; padding:5px; border-radius:6px; line-height:1; flex-shrink:0; }
-  .btn-del:active { color:var(--warn); }
-
   /* ── 관리 메뉴 ── */
   .menu-section { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:13px; margin-bottom:28px; }
   .menu-btns { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
@@ -341,23 +320,6 @@
     </div>
   </div>
 
-  <!-- 목록 -->
-  <div class="list-section">
-    <div class="list-header">
-      <span class="sec-lbl" style="margin:0">스캔 목록</span>
-      <div class="list-actions">
-        <button class="btn-sm" onclick="toggleSearch()">🔍 검색</button>
-        <button class="btn-sm" onclick="clearAll()">전체삭제</button>
-      </div>
-    </div>
-    <div style="padding:7px 7px 0;display:none" id="searchWrap">
-      <input class="search-input" id="searchInput" placeholder="바코드 검색..." oninput="renderList()" autocomplete="off">
-    </div>
-    <div id="listContainer">
-      <div class="empty-st"><div class="empty-ic">📋</div>스캔된 바코드가 없습니다<br>외장 스캐너로 찍거나 직접 입력하세요</div>
-    </div>
-  </div>
-
   <!-- 관리 메뉴 -->
   <div class="menu-section">
     <div class="menu-btns">
@@ -383,7 +345,6 @@
 
 <script>
 // ── 데이터 ─────────────────────────────────────────────────────
-let barcodes   = JSON.parse(localStorage.getItem('wh_barcodes') || '[]');
 let searchOpen = false;
 let inputBuffer = '';
 
@@ -476,80 +437,14 @@ function addManual() {
 }
 
 // ── 바코드 데이터 관리 ──────────────────────────────────────────
-function save() { localStorage.setItem('wh_barcodes', JSON.stringify(barcodes)); }
-
 function addBarcode(code) {
   const s = (code || '').trim();
   if (!s) return;
 
   document.getElementById('lastCode').textContent = s;
   document.getElementById('lastBar').classList.add('on');
-
-  if (barcodes.find(b => b.code === s)) {
-    showToast('⚠️ 이미 등록됨: ' + s, true);
-    return;
-  }
-
-  const now  = Date.now();
-  const time = new Date().toLocaleTimeString('ko-KR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-  barcodes.unshift({ code: s, time, id: now });
-  save(); renderList(); updateCount();
-  showToast('✓ 등록: ' + s);
+  showToast('✓ 스캔: ' + s);
   if (navigator.vibrate) navigator.vibrate([60, 30, 60]);
-}
-
-function deleteItem(id) {
-  barcodes = barcodes.filter(b => b.id !== id);
-  save(); renderList(); updateCount();
-}
-
-function clearAll() {
-  if (!barcodes.length) return;
-  if (confirm(barcodes.length + '개 항목을 모두 삭제할까요?')) {
-    barcodes = []; save(); renderList(); updateCount();
-  }
-  focusInput();
-}
-
-function updateCount() {
-  document.getElementById('totalCount').textContent = barcodes.length + ' items';
-}
-
-function renderList() {
-  const container = document.getElementById('listContainer');
-  const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
-  const list = q ? barcodes.filter(b => b.code.toLowerCase().includes(q)) : barcodes;
-
-  if (!list.length) {
-    container.innerHTML = `<div class="empty-st"><div class="empty-ic">📋</div>${q ? '검색 결과 없음' : '스캔된 바코드가 없습니다<br>외장 스캐너로 찍거나 직접 입력하세요'}</div>`;
-    return;
-  }
-
-  const total = barcodes.length;
-  const esc = s => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  container.innerHTML = '<div class="bc-list">' + list.map(b => {
-    const num = total - barcodes.indexOf(b);
-    const isNew = Date.now() - b.id < 4000;
-    const codeHtml = q
-      ? b.code.replace(new RegExp(esc(q), 'gi'), m => `<span style="color:var(--accent);background:rgba(0,212,255,.12);border-radius:3px">${m}</span>`)
-      : b.code;
-    return `<div class="bc-item${isNew?' new':''}">
-      <span class="i-num">#${num}</span>
-      <div class="i-info">
-        <div class="i-code">${codeHtml}</div>
-        <div class="i-meta">${b.time}</div>
-      </div>
-      <button class="btn-del" onclick="deleteItem(${b.id})">✕</button>
-    </div>`;
-  }).join('') + '</div>';
-}
-
-function toggleSearch() {
-  searchOpen = !searchOpen;
-  const w = document.getElementById('searchWrap');
-  w.style.display = searchOpen ? 'block' : 'none';
-  if (searchOpen) document.getElementById('searchInput').focus();
-  else { document.getElementById('searchInput').value = ''; renderList(); focusInput(); }
 }
 
 function showToast(msg, isDup = false) {
@@ -596,8 +491,6 @@ function sendToNativeApp() {
 }
 
 // ── 초기화 ──────────────────────────────────────────────────────
-renderList();
-updateCount();
 focusInput();
 </script>
 </body>
