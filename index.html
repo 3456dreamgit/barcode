@@ -53,127 +53,48 @@
   .logo-main { font-family: 'JetBrains Mono', monospace; font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--accent); white-space: nowrap; }
   .logo-sub  { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 400; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
 
-  .count-badge { display: none; }
+  .count-badge { display:none; }
 
   .container { padding: 14px; max-width: 480px; margin: 0 auto; }
 
   /* ── 바코드 입력 ── */
-  .manual-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; }
-  .sec-lbl { font-size: 11px; font-weight: 700; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+  .manual-section { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px; margin-bottom:14px; }
+  .sec-lbl { font-size:11px; font-weight:700; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; }
 
-  .scan-indicator { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--muted); text-transform: none; letter-spacing: 0; }
-  .scan-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent2); box-shadow: 0 0 6px var(--accent2); animation: pulse 1.4s infinite; }
+  .scan-indicator { display:flex; align-items:center; gap:6px; font-size:10px; color:var(--muted); text-transform:none; letter-spacing:0; }
+  .scan-dot { width:7px; height:7px; border-radius:50%; background:var(--accent2); box-shadow:0 0 6px var(--accent2); animation:pulse 1.4s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
 
-  .input-row { display: flex; gap: 8px; position: relative; }
+  .input-row { display:flex; gap:8px; position: relative; }
 
   .barcode-input {
-    flex: 1;
-    background: var(--surface2);
-    border: 1.5px solid var(--accent);
-    border-radius: 10px;
-    padding: 14px 13px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 15px;
-    outline: none;
+    flex:1;
+    background:var(--surface2);
+    border:1.5px solid var(--accent);
+    border-radius:10px;
+    padding:14px 13px;
+    color:var(--text);
+    font-family:'JetBrains Mono',monospace;
+    font-size:15px;
+    outline:none;
     caret-color: var(--accent2);
     box-shadow: 0 0 0 3px rgba(0,212,255,0.08);
   }
 
-  .input-hint { margin-top: 8px; font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-
-  .btn-add { background: var(--accent2); border: none; border-radius: 10px; color: var(--bg); font-weight: 700; font-size: 22px; width: 46px; cursor: pointer; transition: all .15s; }
-  .btn-add:active { transform: scale(.9); }
-
-  /* ── 숫자 키패드 모달 ── */
-  .keypad-backdrop {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.6);
-    display: none;
-    align-items: flex-end;
-    justify-content: center;
-    z-index: 1000;
-    backdrop-filter: blur(3px);
-  }
-  .keypad-backdrop.show { display: flex; }
-
-  .keypad-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 20px 20px 0 0;
-    padding: 16px;
-    width: 100%;
-    max-width: 480px;
-    animation: slideUp .25s ease;
-  }
-  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
-
-  .keypad-header {
+  .input-hint {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--muted);
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border);
-  }
-  .keypad-title { font-size: 12px; font-weight: 700; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
-
-  /* 키패드 입력 미리보기 */
-  .keypad-preview {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 18px;
-    color: var(--accent);
-    min-height: 28px;
-    letter-spacing: 2px;
-    word-break: break-all;
+    gap: 6px;
   }
 
-  .keypad-close {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--muted);
-    font-size: 13px;
-    font-weight: 700;
-    padding: 6px 12px;
-    cursor: pointer;
-  }
-  .keypad-close:active { color: var(--warn); }
-
-  .keypad-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-
-  .kp-btn {
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 20px;
-    font-weight: 700;
-    padding: 18px 0;
-    cursor: pointer;
-    transition: all .1s;
-    text-align: center;
-  }
-  .kp-btn:active { background: var(--border); transform: scale(.94); }
-  .kp-btn.del { font-size: 16px; color: var(--warn); }
-  .kp-btn.confirm {
-    grid-column: span 2;
-    background: linear-gradient(135deg, var(--accent2), #00cc7a);
-    color: var(--bg);
-    font-size: 15px;
-    border: none;
-  }
-  .kp-btn.confirm:active { opacity: .85; }
+  .btn-add { background:var(--accent2); border:none; border-radius:10px; color:var(--bg); font-weight:700; font-size:22px; width:46px; cursor:pointer; transition:all .15s; }
+  .btn-add:active { transform:scale(.9); }
 
   /* ── 거래처/매장/수량/단위 폼 ── */
-  .form-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 14px; margin-bottom: 14px; }
+  .form-section { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:14px; margin-bottom:14px; }
 
   .form-grid {
     display: grid;
@@ -183,15 +104,22 @@
   }
 
   .form-field { display: flex; flex-direction: column; gap: 6px; }
+  .form-field.full { grid-column: 1 / -1; }
 
-  .form-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+  .form-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
 
-  .form-select {
+  .form-select, .form-input-sm {
     width: 100%;
     background: var(--surface2);
     border: 1px solid var(--border);
     border-radius: 9px;
-    padding: 10px 30px 10px 10px;
+    padding: 10px 10px;
     color: var(--text);
     font-family: 'Noto Sans KR', sans-serif;
     font-size: 13px;
@@ -199,14 +127,23 @@
     transition: border-color .2s;
     appearance: none;
     -webkit-appearance: none;
+  }
+
+  .form-select {
     background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234a6080' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 10px center;
     background-size: 16px;
+    padding-right: 30px;
   }
-  .form-select:focus { border-color: var(--accent); }
 
-  .form-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .form-select:focus, .form-input-sm:focus { border-color: var(--accent); }
+
+  .form-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
 
   .btn-form {
     padding: 13px;
@@ -223,29 +160,33 @@
   .btn-form.ret { background: linear-gradient(135deg, var(--warn), #cc2200); color: var(--bg); }
 
   /* ── 마지막 인식 ── */
-  .last-bar { margin: 12px 0 0; padding: 9px 13px; background: rgba(0,255,157,.07); border: 1px solid rgba(0,255,157,.22); border-radius: 9px; display: none; align-items: center; gap: 8px; }
-  .last-bar.on { display: flex; }
-  .last-lbl { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--accent2); white-space: nowrap; text-transform: uppercase; }
-  .last-code { flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text); word-break: break-all; }
+  .last-bar { margin: 12px 0 0; padding: 9px 13px; background: rgba(0,255,157,.07); border: 1px solid rgba(0,255,157,.22); border-radius: 9px; display:none; align-items:center; gap:8px; }
+  .last-bar.on { display:flex; }
+  .last-lbl { font-size:10px; font-weight:700; letter-spacing:1px; color:var(--accent2); white-space:nowrap; text-transform:uppercase; }
+  .last-code { flex:1; font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--text); word-break:break-all; }
 
   /* ── 토스트 ── */
-  .toast { position: fixed; top: 74px; left: 50%; transform: translateX(-50%) translateY(-14px); background: var(--accent2); color: var(--bg); font-weight: 700; font-size: 13px; padding: 9px 18px; border-radius: 24px; opacity: 0; transition: all .25s; z-index: 1500; white-space: nowrap; pointer-events: none; max-width: 90vw; overflow: hidden; text-overflow: ellipsis; }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .toast.dup  { background: var(--warn); }
+  .toast { position:fixed; top:74px; left:50%; transform:translateX(-50%) translateY(-14px); background:var(--accent2); color:var(--bg); font-weight:700; font-size:13px; padding:9px 18px; border-radius:24px; opacity:0; transition:all .25s; z-index:999; white-space:nowrap; pointer-events:none; max-width:90vw; overflow:hidden; text-overflow:ellipsis; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.dup  { background:var(--warn); }
 
+  /* ── 목록 ── */
   /* ── 관리 메뉴 ── */
-  .menu-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 13px; margin-bottom: 28px; }
-  .menu-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .menu-section { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:13px; margin-bottom:28px; }
+  .menu-btns { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
   .btn-menu {
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
-    padding: 16px 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px;
-    color: var(--text); font-family: 'Noto Sans KR', sans-serif; font-size: 13px; font-weight: 700;
-    cursor: pointer; transition: all .15s;
+    display:flex; flex-direction: column; align-items:center; justify-content:center; gap:6px;
+    padding:16px 6px; background:var(--surface2); border:1px solid var(--border); border-radius:12px;
+    color:var(--text); font-family:'Noto Sans KR',sans-serif; font-size:13px; font-weight:700;
+    cursor:pointer; transition:all .15s;
   }
-  .btn-menu:active { transform: scale(.95); border-color: var(--accent); }
+  .btn-menu:active { transform:scale(.95); border-color:var(--accent); }
   .btn-menu .ic { font-size: 22px; }
+  .btn-menu.in:active { border-color: var(--accent2); }
+  .btn-menu.out:active { border-color: var(--warn); }
+  .btn-menu.stock:active { border-color: var(--accent); }
 
-  /* ── 개발중 모달 ── */
+  /* ── 모달 팝업 ── */
   .modal-backdrop {
     position: fixed; inset: 0;
     background: rgba(0,0,0,0.6);
@@ -295,7 +236,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION v2608031500</span>
+      <span class="logo-main">UNOVISION v2606250420</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -315,9 +256,9 @@
         inputmode="none" autocomplete="off" autocorrect="off" spellcheck="false"
         readonly
         onkeydown="handleKey(event)">
-      <button class="btn-add" onclick="openKeypad()">+</button>
+      <button class="btn-add" onclick="addManual()">+</button>
     </div>
-    <div class="input-hint">📡 외장 스캐너로 바코드를 찍으면 자동 인식됩니다</div>
+    <div class="input-hint">📡 외장 스캐너로 바코드를 찍으면 자동 등록됩니다</div>
 
     <div class="last-bar" id="lastBar">
       <span class="last-lbl">LAST</span>
@@ -374,16 +315,16 @@
       </div>
     </div>
     <div class="form-btns">
-      <button class="btn-form in"  onclick="sendToNativeApp('save')">📥 입고</button>
-      <button class="btn-form ret" onclick="sendToNativeApp('save')">↩️ 반품</button>
+      <button class="btn-form in" onclick="sendToNativeApp()">📥 입고</button>
+      <button class="btn-form ret" onclick="sendToNativeApp()">↩️ 반품</button>
     </div>
   </div>
 
   <!-- 관리 메뉴 -->
   <div class="menu-section">
     <div class="menu-btns">
-      <button class="btn-menu in"    onclick="openDevModal()"><span class="ic">📥</span>입고관리</button>
-      <button class="btn-menu out"   onclick="openDevModal()"><span class="ic">↩️</span>반품관리</button>
+      <button class="btn-menu in" onclick="openDevModal()"><span class="ic">📥</span>입고관리</button>
+      <button class="btn-menu out" onclick="openDevModal()"><span class="ic">↩️</span>반품관리</button>
       <button class="btn-menu stock" onclick="openDevModal()"><span class="ic">📊</span>재고관리</button>
     </div>
   </div>
@@ -402,47 +343,14 @@
   </div>
 </div>
 
-<!-- 숫자 키패드 모달 -->
-<div class="keypad-backdrop" id="keypadModal">
-  <div class="keypad-box">
-    <div class="keypad-header">
-      <div>
-        <div class="keypad-title">수동 입력</div>
-        <div class="keypad-preview" id="keypadPreview">—</div>
-      </div>
-      <button class="keypad-close" onclick="closeKeypad()">닫기</button>
-    </div>
-    <div class="keypad-grid">
-      <button class="kp-btn" onclick="kpInput('1')">1</button>
-      <button class="kp-btn" onclick="kpInput('2')">2</button>
-      <button class="kp-btn" onclick="kpInput('3')">3</button>
-      <button class="kp-btn" onclick="kpInput('4')">4</button>
-      <button class="kp-btn" onclick="kpInput('5')">5</button>
-      <button class="kp-btn" onclick="kpInput('6')">6</button>
-      <button class="kp-btn" onclick="kpInput('7')">7</button>
-      <button class="kp-btn" onclick="kpInput('8')">8</button>
-      <button class="kp-btn" onclick="kpInput('9')">9</button>
-      <button class="kp-btn del" onclick="kpDelete()">⌫</button>
-      <button class="kp-btn" onclick="kpInput('0')">0</button>
-      <button class="kp-btn del" onclick="kpClear()">C</button>
-    </div>
-    <div class="keypad-grid">
-      <button class="kp-btn confirm" onclick="kpConfirm()">✓ 확인</button>
-      <button class="kp-btn del" style="font-size:13px" onclick="kpClear()">전체삭제</button>
-    </div>
-  </div>
-</div>
-
 <script>
-// ── 상태 ────────────────────────────────────────────────────────
-let inputBuffer  = '';   // HID 스캐너 버퍼
-let keypadBuffer = '';   // 수동 키패드 버퍼
-let keypadOpen   = false;
+// ── 데이터 ─────────────────────────────────────────────────────
+let searchOpen = false;
+let inputBuffer = '';
 
-// ── 입력창 참조 ──────────────────────────────────────────────────
+// ── 항상 포커스 유지 (외장 스캐너용 HID 입력 캡처) ───────────────
 const manualInput = () => document.getElementById('manualInput');
 
-// ── 포커스 유지 ──────────────────────────────────────────────────
 function focusInput() {
   const el = manualInput();
   if (document.activeElement !== el) {
@@ -450,8 +358,10 @@ function focusInput() {
   }
 }
 
+// 페이지 로드 시 포커스
 window.addEventListener('load', focusInput);
 
+// 어디를 클릭/터치해도 항상 입력창으로 포커스 복귀
 function isExemptTarget(el) {
   return el.id === 'manualInput'
     || el.tagName === 'BUTTON'
@@ -461,37 +371,51 @@ function isExemptTarget(el) {
 }
 
 document.addEventListener('mousedown', (e) => {
-  if (!isExemptTarget(e.target)) setTimeout(focusInput, 0);
+  if (!isExemptTarget(e.target)) {
+    setTimeout(focusInput, 0);
+  }
 });
 document.addEventListener('touchstart', (e) => {
-  if (!isExemptTarget(e.target)) setTimeout(focusInput, 0);
+  if (!isExemptTarget(e.target)) {
+    setTimeout(focusInput, 0);
+  }
 });
 
-manualInput().addEventListener('blur', () => {
-  const anyModalOpen = document.getElementById('devModal').classList.contains('show')
-                    || document.getElementById('keypadModal').classList.contains('show');
+// 포커스가 빠지면 즉시 복귀 (단, 모달이나 select/button 등으로 이동한 경우는 제외)
+manualInput().addEventListener('blur', (e) => {
+  const modalOpen = document.getElementById('devModal').classList.contains('show');
   setTimeout(() => {
-    if (!anyModalOpen && !isExemptTarget(document.activeElement)) focusInput();
+    const active = document.activeElement;
+    if (!modalOpen && !isExemptTarget(active)) {
+      focusInput();
+    }
   }, 10);
 });
 
+// 주기적으로 포커스 체크 (안전망)
 setInterval(() => {
-  const anyModalOpen = document.getElementById('devModal').classList.contains('show')
-                    || document.getElementById('keypadModal').classList.contains('show');
-  if (!anyModalOpen && !isExemptTarget(document.activeElement)) focusInput();
+  const modalOpen = document.getElementById('devModal').classList.contains('show');
+  const active = document.activeElement;
+  const activeIsExempt = active && isExemptTarget(active);
+  if (!modalOpen && !activeIsExempt) {
+    focusInput();
+  }
 }, 800);
 
-// ── HID 스캐너 키 처리 ──────────────────────────────────────────
+// ── 외장 스캐너 입력 처리 ───────────────────────────────────────
+// readonly 인풋이라 키보드는 안 뜨지만, 외장 스캐너(HID)는 keydown 이벤트로 들어옴
 function handleKey(e) {
   if (e.key === 'Enter') {
     e.preventDefault();
     if (inputBuffer.trim()) {
-      onBarcodeReady(inputBuffer);
+      addBarcode(inputBuffer);
       inputBuffer = '';
       manualInput().value = '';
     }
     return;
   }
+
+  // readonly 속성 때문에 value가 안 바뀌므로 버퍼에 직접 누적
   if (e.key.length === 1) {
     e.preventDefault();
     inputBuffer += e.key;
@@ -503,72 +427,26 @@ function handleKey(e) {
   }
 }
 
-// ── 바코드 확정 (HID 또는 수동 공통) ────────────────────────────
-function onBarcodeReady(code) {
+function addManual() {
+  if (inputBuffer.trim()) {
+    addBarcode(inputBuffer);
+    inputBuffer = '';
+    manualInput().value = '';
+  }
+  focusInput();
+}
+
+// ── 바코드 데이터 관리 ──────────────────────────────────────────
+function addBarcode(code) {
   const s = (code || '').trim();
   if (!s) return;
 
-  // 바코드 입력란 & LAST 표시
-  manualInput().value = s;
-  inputBuffer = s;
   document.getElementById('lastCode').textContent = s;
   document.getElementById('lastBar').classList.add('on');
   showToast('✓ 스캔: ' + s);
   if (navigator.vibrate) navigator.vibrate([60, 30, 60]);
-
-  // 바코드 확정 즉시 uno://search 로 전달
-  window.location = 'uno://search?' + s;
 }
 
-// ── 숫자 키패드 ──────────────────────────────────────────────────
-function openKeypad() {
-  keypadBuffer = inputBuffer; // 기존 입력값 이어받기
-  document.getElementById('keypadPreview').textContent = keypadBuffer || '—';
-  document.getElementById('keypadModal').classList.add('show');
-  keypadOpen = true;
-}
-
-function closeKeypad() {
-  document.getElementById('keypadModal').classList.remove('show');
-  keypadOpen = false;
-  focusInput();
-}
-
-function kpInput(num) {
-  keypadBuffer += num;
-  document.getElementById('keypadPreview').textContent = keypadBuffer || '—';
-  // 바코드 입력란에 실시간 반영
-  manualInput().value = keypadBuffer;
-  inputBuffer = keypadBuffer;
-}
-
-function kpDelete() {
-  keypadBuffer = keypadBuffer.slice(0, -1);
-  document.getElementById('keypadPreview').textContent = keypadBuffer || '—';
-  manualInput().value = keypadBuffer;
-  inputBuffer = keypadBuffer;
-}
-
-function kpClear() {
-  keypadBuffer = '';
-  document.getElementById('keypadPreview').textContent = '—';
-  manualInput().value = '';
-  inputBuffer = '';
-}
-
-function kpConfirm() {
-  const code = keypadBuffer.trim();
-  closeKeypad();
-  if (code) {
-    onBarcodeReady(code);
-    // 확인 후 버퍼 초기화
-    inputBuffer = '';
-    keypadBuffer = '';
-    manualInput().value = '';
-  }
-}
-
-// ── 토스트 ───────────────────────────────────────────────────────
 function showToast(msg, isDup = false) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -577,7 +455,7 @@ function showToast(msg, isDup = false) {
   t._t = setTimeout(() => t.className = 'toast', 2200);
 }
 
-// ── 개발중 모달 ──────────────────────────────────────────────────
+// ── 개발중 모달 ─────────────────────────────────────────────────
 function openDevModal() {
   document.getElementById('devModal').classList.add('show');
 }
@@ -586,9 +464,9 @@ function closeDevModal() {
   focusInput();
 }
 
-// ── 입고/반품 → 네이티브 앱 전달 ────────────────────────────────
+// ── 네이티브 앱(전용 브라우저)으로 데이터 전달 ───────────────────
 // uno://save?바코드|거래처|매장명|수량|단위
-function sendToNativeApp(cmd) {
+function sendToNativeApp() {
   const partner = document.getElementById('partnerSelect').value;
   const store   = document.getElementById('storeSelect').value;
   const qty     = document.getElementById('qtySelect').value;
@@ -599,18 +477,20 @@ function sendToNativeApp(cmd) {
     return;
   }
 
-  // 바코드: 현재 입력란 값 사용 (없으면 테스트 고정값)
-  const barcode = inputBuffer.trim() || '8809656327866';
+  // TODO: 실제 스캔된 바코드를 사용해야 함. 현재는 테스트용 고정값.
+  const barcode = '8809656327866';
 
-  window.location = 'uno://' + cmd + '?' +
+  const url = 'uno://save?' +
     barcode + '|' +
     partner + '|' +
-    store   + '|' +
-    qty     + '|' +
+    store + '|' +
+    qty + '|' +
     unit;
+
+  window.location = url;
 }
 
-// ── 초기화 ───────────────────────────────────────────────────────
+// ── 초기화 ──────────────────────────────────────────────────────
 focusInput();
 </script>
 </body>
