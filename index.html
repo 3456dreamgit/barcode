@@ -295,7 +295,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION v2608191455</span>
+      <span class="logo-main">UNOVISION v2608031500</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -612,75 +612,6 @@ function sendToNativeApp(cmd) {
 
 // ── 초기화 ───────────────────────────────────────────────────────
 focusInput();
-
-// ================================================================
-// API 응답 XML → uno://엔드포인트명?XML 전달 (v2608191455)
-// ================================================================
-// 이 함수는 Delphi에서 WebBrowser1NavigationComplete 이벤트 시
-// EvaluateJavaScript('extractAndSendApiResult()') 로 호출해야 함
-//
-// 지원 엔드포인트 매핑:
-//   getGoodsUnitCheck.do  → uno://getGoodsUnitCheck?~
-//   getGoodsInHistory.do  → uno://getGoodsInHistory?~
-//   getGoodsStockCheck.do → uno://getGoodsStockCheck?~
-//   saveGoodsBuyInfo.do   → uno://saveGoodsBuyInfo?~
-//   getStoreInfo.do       → uno://getStoreInfo?~
-//   getDealInfo.do        → uno://getDealInfo?~
-//
-// XML 4000자 미만 → uno://엔드포인트?XML전체 (URL 직접 전달)
-// XML 4000자 이상 → localStorage 저장 후 uno://엔드포인트?__local__
-//   Delphi에서 읽기:
-//   WebBrowser1.EvaluateJavaScript('localStorage.getItem("unoApiResult")')
-// ================================================================
-
-var API_ENDPOINTS = [
-  'getGoodsUnitCheck',
-  'getGoodsInHistory',
-  'getGoodsStockCheck',
-  'saveGoodsBuyInfo',
-  'getStoreInfo',
-  'getDealInfo'
-];
-
-var UNO_URL_MAX_LENGTH = 4000;
-
-// Delphi에서 호출할 함수
-// 사용법: WebBrowser1.EvaluateJavaScript('extractAndSendApiResult("getGoodsUnitCheck")')
-function extractAndSendApiResult(endpoint) {
-  // ── 1. 페이지 본문에서 XML 추출
-  var xmlText = '';
-  var preEl   = document.querySelector('pre');
-  if (preEl) {
-    xmlText = preEl.innerText || preEl.textContent;
-  } else {
-    xmlText = document.body.innerText || document.body.textContent;
-  }
-  xmlText = (xmlText || '').trim();
-
-  // XML 응답 확인 (<RESULTS> 또는 <?xml 포함 여부)
-  if (xmlText.indexOf('<RESULTS>') < 0 && xmlText.indexOf('<?xml') < 0) {
-    // XML이 없으면 신호만 전달 (Delphi가 판단)
-    window.location = 'uno://' + endpoint + '?__empty__';
-    return;
-  }
-
-  // ── 2. 길이에 따라 전달 방식 결정
-  var encoded = encodeURIComponent(xmlText);
-  var unoUrl  = 'uno://' + endpoint + '?' + encoded;
-
-  if (unoUrl.length <= UNO_URL_MAX_LENGTH) {
-    // 짧은 경우: URL에 직접 담아 전달
-    window.location = unoUrl;
-  } else {
-    // 긴 경우: localStorage에 저장 후 신호 전달
-    try {
-      localStorage.setItem('unoApiResult',   xmlText);
-      localStorage.setItem('unoApiEndpoint', endpoint);
-    } catch(e) {}
-    window.location = 'uno://' + endpoint + '?__local__';
-  }
-}
-
 </script>
 </body>
 </html>
