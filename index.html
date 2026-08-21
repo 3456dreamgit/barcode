@@ -181,7 +181,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION v2608202359</span>
+      <span class="logo-main">UNOVISION v2608211000</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -478,6 +478,30 @@ function showToast(msg, isDup = false) {
 // ── 개발중 모달 ──────────────────────────────────────────────────
 function openDevModal()  { document.getElementById('devModal').classList.add('show'); }
 function closeDevModal() { document.getElementById('devModal').classList.remove('show'); focusInput(); }
+
+// ================================================================
+// doApiCall: Delphi EvaluateJavaScript로 호출되는 API 요청 함수
+// ================================================================
+// Delphi WinHttpPost에서 아래처럼 호출:
+//   WebBrowser1.EvaluateJavaScript(
+//     'doApiCall("getGoodsUnitCheck","https://...","OPER_CD=...")'
+//   );
+// 메인 HTML에서 직접 XHR 호출 → 응답 XML을 parseAndDisplay로 전달
+// CORS 해결: LoadFromStrings baseURL 대신 EvaluateJavaScript 사용
+// ================================================================
+function doApiCall(ep, url, body) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', url, true);
+  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+  xhr.onload = function() {
+    var xml = xhr.responseText.trim();
+    parseAndDisplay(ep, xml);
+  };
+  xhr.onerror = function() {
+    parseAndDisplay(ep, '__error__');
+  };
+  xhr.send(body);
+}
 
 // ── 입고/반품 → Delphi 전달 ──────────────────────────────────────
 // 형식: uno://save?바코드|거래처|매장명|수량|단위
