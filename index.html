@@ -493,10 +493,15 @@ function doApiCall(ep, url, body) {
   var xhr = new XMLHttpRequest();
   xhr.open('POST', url, true);
   xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-  xhr.onload = function() {
-    var xml = xhr.responseText.trim();
-    parseAndDisplay(ep, xml);
-  };
+
+
+xhr.onload = function() {
+  var xml = xhr.responseText.trim();
+  alert(xml);  // ← 임시 추가
+  parseAndDisplay(ep, xml);
+};
+
+
   xhr.onerror = function() {
     parseAndDisplay(ep, '__error__');
   };
