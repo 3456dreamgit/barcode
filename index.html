@@ -119,23 +119,6 @@
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
   .form-field { display: flex; flex-direction: column; gap: 6px; }
   .form-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
-
-  /* 읽기전용 텍스트 필드 (API 응답값 표시용) */
-  .form-readonly {
-    width: 100%;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 9px;
-    padding: 10px 12px;
-    color: var(--accent);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .form-readonly.fail { color: var(--warn); }
   .form-select {
     width: 100%; background: var(--surface2); border: 1px solid var(--border);
     border-radius: 9px; padding: 10px 30px 10px 10px; color: var(--text);
@@ -181,7 +164,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION v2608211000</span>
+      <span class="logo-main">UNOVISION v2608031500</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -215,16 +198,6 @@
   <!-- 거래처/매장/수량/단위 -->
   <div class="form-section">
     <div class="form-grid">
-      <!-- ① 상품명: 거래처 위 (1.상품단위 조회 - getGoodsUnitCheck 응답값) -->
-      <div class="form-field">
-        <span class="form-label">상품명</span>
-        <div class="form-readonly" id="goodsNm">—</div>
-      </div>
-      <!-- ② 상품코드: 매장명 위 (1.상품단위 조회 - getGoodsUnitCheck 응답값) -->
-      <div class="form-field">
-        <span class="form-label">상품코드</span>
-        <div class="form-readonly" id="goodsCd">—</div>
-      </div>
       <div class="form-field">
         <span class="form-label">거래처</span>
         <select class="form-select" id="partnerSelect">
@@ -479,35 +452,6 @@ function showToast(msg, isDup = false) {
 function openDevModal()  { document.getElementById('devModal').classList.add('show'); }
 function closeDevModal() { document.getElementById('devModal').classList.remove('show'); focusInput(); }
 
-// ================================================================
-// doApiCall: Delphi EvaluateJavaScript로 호출되는 API 요청 함수
-// ================================================================
-// Delphi WinHttpPost에서 아래처럼 호출:
-//   WebBrowser1.EvaluateJavaScript(
-//     'doApiCall("getGoodsUnitCheck","https://...","OPER_CD=...")'
-//   );
-// 메인 HTML에서 직접 XHR 호출 → 응답 XML을 parseAndDisplay로 전달
-// CORS 해결: LoadFromStrings baseURL 대신 EvaluateJavaScript 사용
-// ================================================================
-function doApiCall(ep, url, body) {
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', url, true);
-  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-
-
-xhr.onload = function() {
-  var xml = xhr.responseText.trim();
-  alert(xml);  // ← 임시 추가
-  parseAndDisplay(ep, xml);
-};
-
-
-  xhr.onerror = function() {
-    parseAndDisplay(ep, '__error__');
-  };
-  xhr.send(body);
-}
-
 // ── 입고/반품 → Delphi 전달 ──────────────────────────────────────
 // 형식: uno://save?바코드|거래처|매장명|수량|단위
 // Delphi WebBrowser1ShouldStartLoadWithRequest 에서 수신
@@ -527,73 +471,6 @@ function sendToNativeApp(cmd) {
 
   window.location = 'uno://' + cmd + '?' +
     barcode + '|' + partner + '|' + store + '|' + qty + '|' + unit;
-}
-
-// ================================================================
-// parseAndDisplay: Delphi WinHttpPost XHR 응답 XML을 파싱해서 화면에 표시
-// ================================================================
-// Delphi WinHttpPost 의 xhr.onload 에서 parent.parseAndDisplay(ep, xml) 로 호출됨
-// ep  : 엔드포인트명 (예: 'getGoodsUnitCheck')
-// xml : 서버 응답 XML 전문
-//
-// 지원 엔드포인트:
-//   1. getGoodsUnitCheck  → 상품명(GOODS_NM), 상품코드(GOODS_CD) 표시
-//   2~6. 추후 추가 예정
-// ================================================================
-function parseAndDisplay(ep, xml) {
-
-  // ── XML 태그값 추출 헬퍼 (CDATA 포함 처리) ──
-  function getTagValue(xml, tag) {
-    var startTag = '<' + tag + '>';
-    var endTag   = '</' + tag + '>';
-    var s = xml.indexOf(startTag);
-    if (s < 0) return null;
-    s += startTag.length;
-    // CDATA 처리
-    if (xml.substr(s, 9) === '<![CDATA[') {
-      s += 9;
-      var e = xml.indexOf(']]>', s);
-      return e < 0 ? null : xml.substring(s, e);
-    }
-    var e = xml.indexOf(endTag, s);
-    return e < 0 ? null : xml.substring(s, e);
-  }
-
-  // ── 1. 상품단위 조회 (getGoodsUnitCheck) ──────────────────────
-  if (ep === 'getGoodsUnitCheck') {
-    var goodsNmEl = document.getElementById('goodsNm');
-    var goodsCdEl = document.getElementById('goodsCd');
-
-    var goodsNm = getTagValue(xml, 'GOODS_NM');
-    var goodsCd = getTagValue(xml, 'GOODS_CD');
-
-    // 상품명 표시
-    if (goodsNm !== null && goodsNm.trim() !== '') {
-      goodsNmEl.textContent = goodsNm.trim();
-      goodsNmEl.classList.remove('fail');
-    } else {
-      goodsNmEl.textContent = '확인실패';
-      goodsNmEl.classList.add('fail');
-    }
-
-    // 상품코드 표시
-    if (goodsCd !== null && goodsCd.trim() !== '') {
-      goodsCdEl.textContent = goodsCd.trim();
-      goodsCdEl.classList.remove('fail');
-    } else {
-      goodsCdEl.textContent = '확인실패';
-      goodsCdEl.classList.add('fail');
-    }
-
-    return;
-  }
-
-  // ── 2~6. 추후 추가 예정 ───────────────────────────────────────
-  // if (ep === 'getGoodsInHistory')  { ... }
-  // if (ep === 'getGoodsStockCheck') { ... }
-  // if (ep === 'saveGoodsBuyInfo')   { ... }
-  // if (ep === 'getStoreInfo')       { ... }
-  // if (ep === 'getDealInfo')        { ... }
 }
 
 // ── 초기화 ───────────────────────────────────────────────────────
