@@ -164,7 +164,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION v2608311801</span>
+      <span class="logo-main">UNOVISION v2608031500</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -380,14 +380,10 @@ function handleKey(e) {
 }
 
 // ── 바코드 확정 (HID 스캔 또는 수동 입력 공통) ───────────────────
-// uno://search? → Delphi로 전달 (상품명 조회용)
-// 전송 후 inputBuffer 및 바코드 입력창은 유지 (초기화 안 함)
-// 초기화는 uno://save? 전송 후 또는 + 클릭 시에만 수행
 function onBarcodeReady(code) {
   const s = (code || '').trim();
   if (!s) return;
 
-  // 바코드 입력란 & LAST 표시 업데이트 (유지)
   manualInput().value = s;
   inputBuffer = s;
   document.getElementById('lastCode').textContent = s;
@@ -395,18 +391,14 @@ function onBarcodeReady(code) {
   showToast('✓ 스캔: ' + s);
   if (navigator.vibrate) navigator.vibrate([60, 30, 60]);
 
-  // Delphi로 전달: uno://search?바코드 (상품명 조회용)
-  // 전송 후 페이지 이동이 발생하지만 inputBuffer는 유지됨
+  // Delphi로 전달: uno://search?바코드
   window.location = 'uno://search?' + s;
 }
 
 // ── 숫자 키패드 ──────────────────────────────────────────────────
 function openKeypad() {
-  // + 클릭 시 바코드 초기화
-  inputBuffer  = '';
-  keypadBuffer = '';
-  manualInput().value = '';
-  document.getElementById('keypadPreview').textContent = '—';
+  keypadBuffer = inputBuffer;
+  document.getElementById('keypadPreview').textContent = keypadBuffer || '—';
   document.getElementById('keypadModal').classList.add('show');
 }
 
@@ -440,8 +432,10 @@ function kpConfirm() {
   const code = keypadBuffer.trim();
   closeKeypad();
   if (code) {
+    onBarcodeReady(code);
+    inputBuffer  = '';
     keypadBuffer = '';
-    onBarcodeReady(code);  // inputBuffer 유지 + uno://search? 전송
+    manualInput().value = '';
   }
 }
 
@@ -467,55 +461,20 @@ function sendToNativeApp(cmd) {
   const qty     = document.getElementById('qtySelect').value;
   const unit    = document.getElementById('unitSelect').value;
 
-  // 바코드 확인 (없으면 경고)
-  const barcode = inputBuffer.trim();
-  if (!barcode) {
-    showToast('⚠️ 바코드가 없습니다.', true);
-    return;
-  }
-
   if (!partner || !store) {
     showToast('⚠️ 거래처/매장명을 선택하세요', true);
     return;
   }
 
+  // 바코드: 현재 입력란 값 (없으면 테스트 고정값)
+  const barcode = inputBuffer.trim() || '8809656327866';
+
   window.location = 'uno://' + cmd + '?' +
     barcode + '|' + partner + '|' + store + '|' + qty + '|' + unit;
-
-  // uno://save? 전송 후 바코드 초기화
-  inputBuffer = '';
-  manualInput().value = '';
-  document.getElementById('lastBar').classList.remove('on');
-  document.getElementById('lastCode').textContent = '—';
 }
 
 // ── 초기화 ───────────────────────────────────────────────────────
 focusInput();
-
-// ================================================================
-// doApiCall: Delphi WinHttpPost에서 EvaluateJavaScript로 호출
-// ================================================================
-// 역할: HTML을 덮어쓰지 않고 XHR로 API 호출 → inputBuffer 보존
-// Delphi에서 호출:
-//   WebBrowser1.EvaluateJavaScript(
-//     'doApiCall("getGoodsUnitCheck","https://...","OPER_CD=...")'
-//   );
-// 응답 XML은 uno://엔드포인트?XML 형태로 Delphi에 전달
-// ================================================================
-function doApiCall(ep, url, body) {
-  var xhr = new XMLHttpRequest();
-  xhr.open('POST', url, true);
-  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
-  xhr.onload = function() {
-    var xml = xhr.responseText.trim();
-    var unoUrl = 'uno://' + ep + '?' + encodeURIComponent(xml);
-    window.location = unoUrl;
-  };
-  xhr.onerror = function() {
-    window.location = 'uno://' + ep + '?__error__';
-  };
-  xhr.send(body);
-}
 </script>
 </body>
 </html>
