@@ -398,8 +398,11 @@ function onBarcodeReady(code) {
 
 // ── 숫자 키패드 ──────────────────────────────────────────────────
 function openKeypad() {
-  keypadBuffer = inputBuffer;
-  document.getElementById('keypadPreview').textContent = keypadBuffer || '—';
+  // + 클릭 시 바코드 초기화
+  inputBuffer  = '';
+  keypadBuffer = '';
+  manualInput().value = '';
+  document.getElementById('keypadPreview').textContent = '—';
   document.getElementById('keypadModal').classList.add('show');
 }
 
@@ -481,6 +484,12 @@ function sendToNativeApp(cmd) {
 
   window.location = 'uno://' + cmd + '?' +
     barcode + '|' + partner + '|' + store + '|' + qty + '|' + unit;
+
+  // uno://save? 전송 후 바코드 초기화
+  inputBuffer = '';
+  manualInput().value = '';
+  document.getElementById('lastBar').classList.remove('on');
+  document.getElementById('lastCode').textContent = '—';
 }
 
 // ── 초기화 ───────────────────────────────────────────────────────
