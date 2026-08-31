@@ -380,19 +380,23 @@ function handleKey(e) {
 }
 
 // ── 바코드 확정 (HID 스캔 또는 수동 입력 공통) ───────────────────
+// uno://search? → Delphi로 전달 (상품명 조회용)
+// 전송 후 inputBuffer 및 바코드 입력창은 유지 (초기화 안 함)
+// 초기화는 uno://save? 전송 후 또는 + 클릭 시에만 수행
 function onBarcodeReady(code) {
   const s = (code || '').trim();
   if (!s) return;
 
-  // 바코드 입력란 & LAST 표시 업데이트
+  // 바코드 입력란 & LAST 표시 업데이트 (유지)
   manualInput().value = s;
-  inputBuffer = s;  // ← 유지 (초기화 안 함, 입고 버튼에서 사용)
+  inputBuffer = s;
   document.getElementById('lastCode').textContent = s;
   document.getElementById('lastBar').classList.add('on');
   showToast('✓ 스캔: ' + s);
   if (navigator.vibrate) navigator.vibrate([60, 30, 60]);
 
-  // Delphi로 전달: uno://search?바코드
+  // Delphi로 전달: uno://search?바코드 (상품명 조회용)
+  // 전송 후 페이지 이동이 발생하지만 inputBuffer는 유지됨
   window.location = 'uno://search?' + s;
 }
 
@@ -436,15 +440,8 @@ function kpConfirm() {
   const code = keypadBuffer.trim();
   closeKeypad();
   if (code) {
-    // 입력란과 버퍼에 값 유지 (입고 버튼에서 사용)
-    manualInput().value = code;
-    inputBuffer = code;
-    document.getElementById('lastCode').textContent = code;
-    document.getElementById('lastBar').classList.add('on');
-    showToast('✓ 입력: ' + code);
     keypadBuffer = '';
-    // Delphi로 전달: uno://search?바코드
-    window.location = 'uno://search?' + code;
+    onBarcodeReady(code);  // inputBuffer 유지 + uno://search? 전송
   }
 }
 
