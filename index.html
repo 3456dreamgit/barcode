@@ -164,7 +164,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION v2608031500</span>
+      <span class="logo-main">UNOVISION v2608311700</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -384,8 +384,9 @@ function onBarcodeReady(code) {
   const s = (code || '').trim();
   if (!s) return;
 
+  // 바코드 입력란 & LAST 표시 업데이트
   manualInput().value = s;
-  inputBuffer = s;
+  inputBuffer = s;  // ← 유지 (초기화 안 함, 입고 버튼에서 사용)
   document.getElementById('lastCode').textContent = s;
   document.getElementById('lastBar').classList.add('on');
   showToast('✓ 스캔: ' + s);
@@ -432,10 +433,15 @@ function kpConfirm() {
   const code = keypadBuffer.trim();
   closeKeypad();
   if (code) {
-    onBarcodeReady(code);
-    inputBuffer  = '';
+    // 입력란과 버퍼에 값 유지 (입고 버튼에서 사용)
+    manualInput().value = code;
+    inputBuffer = code;
+    document.getElementById('lastCode').textContent = code;
+    document.getElementById('lastBar').classList.add('on');
+    showToast('✓ 입력: ' + code);
     keypadBuffer = '';
-    manualInput().value = '';
+    // Delphi로 전달: uno://search?바코드
+    window.location = 'uno://search?' + code;
   }
 }
 
@@ -461,13 +467,17 @@ function sendToNativeApp(cmd) {
   const qty     = document.getElementById('qtySelect').value;
   const unit    = document.getElementById('unitSelect').value;
 
+  // 바코드 확인 (없으면 경고)
+  const barcode = inputBuffer.trim();
+  if (!barcode) {
+    showToast('⚠️ 바코드가 없습니다.', true);
+    return;
+  }
+
   if (!partner || !store) {
     showToast('⚠️ 거래처/매장명을 선택하세요', true);
     return;
   }
-
-  // 바코드: 현재 입력란 값 (없으면 테스트 고정값)
-  const barcode = inputBuffer.trim() || '8809656327866';
 
   window.location = 'uno://' + cmd + '?' +
     barcode + '|' + partner + '|' + store + '|' + qty + '|' + unit;
