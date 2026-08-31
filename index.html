@@ -164,7 +164,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION v2608311700</span>
+      <span class="logo-main">UNOVISION v2608311801</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -491,6 +491,31 @@ function sendToNativeApp(cmd) {
 
 // ── 초기화 ───────────────────────────────────────────────────────
 focusInput();
+
+// ================================================================
+// doApiCall: Delphi WinHttpPost에서 EvaluateJavaScript로 호출
+// ================================================================
+// 역할: HTML을 덮어쓰지 않고 XHR로 API 호출 → inputBuffer 보존
+// Delphi에서 호출:
+//   WebBrowser1.EvaluateJavaScript(
+//     'doApiCall("getGoodsUnitCheck","https://...","OPER_CD=...")'
+//   );
+// 응답 XML은 uno://엔드포인트?XML 형태로 Delphi에 전달
+// ================================================================
+function doApiCall(ep, url, body) {
+  var xhr = new XMLHttpRequest();
+  xhr.open('POST', url, true);
+  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8');
+  xhr.onload = function() {
+    var xml = xhr.responseText.trim();
+    var unoUrl = 'uno://' + ep + '?' + encodeURIComponent(xml);
+    window.location = unoUrl;
+  };
+  xhr.onerror = function() {
+    window.location = 'uno://' + ep + '?__error__';
+  };
+  xhr.send(body);
+}
 </script>
 </body>
 </html>
