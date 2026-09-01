@@ -164,7 +164,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION v2608031500</span>
+      <span class="logo-main">UNOVISION v2609011730</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -180,12 +180,10 @@
       <span class="scan-indicator"><span class="scan-dot"></span>입력 대기중</span>
     </div>
     <div class="input-row">
-      <!-- readonly + inputmode=none → 안드로이드 키보드 차단, HID 스캐너만 입력 가능 -->
       <input class="barcode-input" id="manualInput" type="text"
         inputmode="none" autocomplete="off" autocorrect="off" spellcheck="false"
         readonly
         onkeydown="handleKey(event)">
-      <!-- + 버튼 → 숫자 키패드 팝업 열기 -->
       <button class="btn-add" onclick="openKeypad()">+</button>
     </div>
     <div class="input-hint">📡 외장 스캐너로 바코드를 찍으면 자동 인식됩니다</div>
@@ -244,7 +242,6 @@
       </div>
     </div>
     <div class="form-btns">
-      <!-- 입고/반품 → uno://save?바코드|거래처|매장명|수량|단위 -->
       <button class="btn-form in"  onclick="sendToNativeApp('save')">📥 입고</button>
       <button class="btn-form ret" onclick="sendToNativeApp('save')">↩️ 반품</button>
     </div>
@@ -317,20 +314,16 @@
 //   6. 안드로이드 소프트 키보드 차단 (readonly + inputmode=none)
 // ================================================================
 
-// ── 상태 변수 ────────────────────────────────────────────────────
-let inputBuffer  = '';  // HID 스캐너 입력 버퍼
-let keypadBuffer = '';  // 수동 키패드 입력 버퍼
+let inputBuffer  = '';
+let keypadBuffer = '';
 
-// ── 입력창 참조 ──────────────────────────────────────────────────
 const manualInput = () => document.getElementById('manualInput');
 
-// ── 포커스 유지 함수 ─────────────────────────────────────────────
 function focusInput() {
   const el = manualInput();
   if (document.activeElement !== el) el.focus({ preventScroll: true });
 }
 
-// 포커스 예외 대상
 function isExemptTarget(el) {
   return el.id === 'manualInput'
     || el.tagName === 'BUTTON'
@@ -357,7 +350,6 @@ setInterval(() => {
   if (!anyOpen && !isExemptTarget(document.activeElement)) focusInput();
 }, 800);
 
-// ── HID 스캐너 키 입력 처리 ──────────────────────────────────────
 function handleKey(e) {
   if (e.key === 'Enter') {
     e.preventDefault();
@@ -379,7 +371,6 @@ function handleKey(e) {
   }
 }
 
-// ── 바코드 확정 (HID 스캔 또는 수동 입력 공통) ───────────────────
 function onBarcodeReady(code) {
   const s = (code || '').trim();
   if (!s) return;
@@ -391,11 +382,9 @@ function onBarcodeReady(code) {
   showToast('✓ 스캔: ' + s);
   if (navigator.vibrate) navigator.vibrate([60, 30, 60]);
 
-  // Delphi로 전달: uno://search?바코드
   window.location = 'uno://search?' + s;
 }
 
-// ── 숫자 키패드 ──────────────────────────────────────────────────
 function openKeypad() {
   keypadBuffer = inputBuffer;
   document.getElementById('keypadPreview').textContent = keypadBuffer || '—';
@@ -412,6 +401,7 @@ function kpInput(num) {
   document.getElementById('keypadPreview').textContent = keypadBuffer || '—';
   manualInput().value = keypadBuffer;
   inputBuffer = keypadBuffer;
+  if (navigator.vibrate) navigator.vibrate(40);  // 키패드 숫자 클릭 시 진동
 }
 
 function kpDelete() {
@@ -439,7 +429,6 @@ function kpConfirm() {
   }
 }
 
-// ── 토스트 알림 ──────────────────────────────────────────────────
 function showToast(msg, isDup = false) {
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -448,13 +437,9 @@ function showToast(msg, isDup = false) {
   t._t = setTimeout(() => t.className = 'toast', 2200);
 }
 
-// ── 개발중 모달 ──────────────────────────────────────────────────
 function openDevModal()  { document.getElementById('devModal').classList.add('show'); }
 function closeDevModal() { document.getElementById('devModal').classList.remove('show'); focusInput(); }
 
-// ── 입고/반품 → Delphi 전달 ──────────────────────────────────────
-// 형식: uno://save?바코드|거래처|매장명|수량|단위
-// Delphi WebBrowser1ShouldStartLoadWithRequest 에서 수신
 function sendToNativeApp(cmd) {
   const partner = document.getElementById('partnerSelect').value;
   const store   = document.getElementById('storeSelect').value;
@@ -466,14 +451,12 @@ function sendToNativeApp(cmd) {
     return;
   }
 
-  // 바코드: 현재 입력란 값 (없으면 테스트 고정값)
-  const barcode = inputBuffer.trim() || '8809656327866';
+  const barcode = inputBuffer.trim() || '123456789012';
 
   window.location = 'uno://' + cmd + '?' +
     barcode + '|' + partner + '|' + store + '|' + qty + '|' + unit;
 }
 
-// ── 초기화 ───────────────────────────────────────────────────────
 focusInput();
 </script>
 </body>
