@@ -78,15 +78,6 @@
     box-shadow: 0 0 0 3px rgba(0,212,255,0.08);
   }
   .input-hint { margin-top: 8px; font-size: 11px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
-  .current-barcode {
-    min-height: 24px;
-    color: #ffffff;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 1px;
-    word-break: break-all;
-  }
   .btn-add { background: var(--accent2); border: none; border-radius: 10px; color: var(--bg); font-weight: 700; font-size: 22px; width: 46px; cursor: pointer; transition: all .15s; }
   .btn-add:active { transform: scale(.9); }
 
@@ -197,7 +188,11 @@
       <!-- + 버튼 → 숫자 키패드 팝업 열기 -->
       <button class="btn-add" onclick="openKeypad()">+</button>
     </div>
-    <div class="input-hint current-barcode" id="currentBarcodeDisplay">—</div>
+    <div class="input-hint">📡 외장 스캐너로 바코드를 찍으면 자동 인식됩니다</div>
+    <div class="last-bar" id="lastBar">
+      <span class="last-lbl">LAST</span>
+      <span class="last-code" id="lastCode">—</span>
+    </div>
   </div>
 
   <!-- 거래처/매장/수량/단위 -->
@@ -325,7 +320,6 @@
 // ── 상태 변수 ────────────────────────────────────────────────────
 let inputBuffer  = '';  // HID 스캐너 입력 버퍼
 let keypadBuffer = '';  // 수동 키패드 입력 버퍼
-let currentBarcode = ''; // 검색 후 저장해 두는 최신 바코드
 
 // ── 입력창 참조 ──────────────────────────────────────────────────
 const manualInput = () => document.getElementById('manualInput');
@@ -390,16 +384,10 @@ function onBarcodeReady(code) {
   const s = (code || '').trim();
   if (!s) return;
 
-  // 최신 바코드를 별도로 기억한다.
-  // 이후 입고/반품 시 uno://save?에 이 값을 사용한다.
-  currentBarcode = s;
-
   manualInput().value = s;
   inputBuffer = s;
-
-  // 화면에는 최신 바코드만 표시한다.
-  document.getElementById('currentBarcodeDisplay').textContent = s;
-
+  document.getElementById('lastCode').textContent = s;
+  document.getElementById('lastBar').classList.add('on');
   showToast('✓ 스캔: ' + s);
   if (navigator.vibrate) navigator.vibrate([60, 30, 60]);
 
@@ -466,7 +454,6 @@ function closeDevModal() { document.getElementById('devModal').classList.remove(
 
 // ── 입고/반품 → Delphi 전달 ──────────────────────────────────────
 // 형식: uno://save?바코드|거래처|매장명|수량|단위
-// 바코드는 currentBarcode에 기억된 최신 값을 사용한다.
 // Delphi WebBrowser1ShouldStartLoadWithRequest 에서 수신
 function sendToNativeApp(cmd) {
   const partner = document.getElementById('partnerSelect').value;
@@ -479,23 +466,11 @@ function sendToNativeApp(cmd) {
     return;
   }
 
-  // 저장용 바코드는 마지막으로 확정된 최신 바코드를 사용한다.
-  if (!currentBarcode.trim()) {
-    showToast('⚠️ 바코드를 먼저 입력하세요', true);
-    return;
-  }
-
-  const barcode = currentBarcode.trim();
+  // 바코드: 현재 입력란 값 (없으면 테스트 고정값)
+  const barcode = inputBuffer.trim() || '8809656327866';
 
   window.location = 'uno://' + cmd + '?' +
     barcode + '|' + partner + '|' + store + '|' + qty + '|' + unit;
-
-  // 저장 요청 후 현재 바코드 표시를 초기화한다.
-  currentBarcode = '';
-  inputBuffer = '';
-  keypadBuffer = '';
-  manualInput().value = '';
-  document.getElementById('currentBarcodeDisplay').textContent = '—';
 }
 
 // ── 초기화 ───────────────────────────────────────────────────────
