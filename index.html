@@ -192,7 +192,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION v2609011158</span>
+      <span class="logo-main">UNOVISION v2609011241</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -410,6 +410,20 @@ function handleKey(e) {
   }
 }
 
+// ── uno:// 전달 함수 (iframe 방식) ──────────────────────────────
+// window.location 사용 시 페이지가 리로드되어 DOM 초기화 문제 발생
+// iframe으로 전달하면 페이지 이동 없이 Delphi로 전달 가능
+// Delphi WebBrowser1ShouldStartLoadWithRequest 에서 수신
+function sendUno(url) {
+  var iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  iframe.src = url;
+  document.body.appendChild(iframe);
+  setTimeout(function() {
+    if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+  }, 500);
+}
+
 // ── 바코드 표시 영역 업데이트 ────────────────────────────────────
 function setBarcodeDisplay(code) {
   const el = document.getElementById('barcodeDisplay');
@@ -436,8 +450,8 @@ function onBarcodeReady(code) {
   showToast('✓ 스캔: ' + s);
   if (navigator.vibrate) navigator.vibrate([60, 30, 60]);
 
-  // Delphi로 전달: uno://search?바코드
-  window.location = 'uno://search?' + s;
+  // Delphi로 전달: uno://search?바코드 (페이지 이동 없이 iframe으로 전달)
+  sendUno('uno://search?' + s);
 }
 
 // ── 숫자 키패드 ──────────────────────────────────────────────────
@@ -485,8 +499,8 @@ function kpConfirm() {
     document.getElementById('lastBar').classList.add('on');
     showToast('✓ 입력: ' + code);
     keypadBuffer = '';
-    // Delphi로 전달: uno://search?바코드
-    window.location = 'uno://search?' + code;
+    // Delphi로 전달: uno://search?바코드 (페이지 이동 없이 iframe으로 전달)
+    sendUno('uno://search?' + code);
   }
 }
 
@@ -529,8 +543,8 @@ function sendToNativeApp(cmd) {
     return;
   }
 
-  window.location = 'uno://' + cmd + '?' +
-    barcode + '|' + partner + '|' + store + '|' + qty + '|' + unit;
+  sendUno('uno://' + cmd + '?' +
+    barcode + '|' + partner + '|' + store + '|' + qty + '|' + unit);
 
   // 전송 후 초기화
   inputBuffer = '';
