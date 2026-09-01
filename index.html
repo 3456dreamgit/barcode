@@ -81,6 +81,34 @@
   .btn-add { background: var(--accent2); border: none; border-radius: 10px; color: var(--bg); font-weight: 700; font-size: 22px; width: 46px; cursor: pointer; transition: all .15s; }
   .btn-add:active { transform: scale(.9); }
 
+  /* ── 바코드 표시 영역 ── */
+  .barcode-display {
+    margin-top: 10px;
+    padding: 10px 13px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+    letter-spacing: 2px;
+    word-break: break-all;
+  }
+  .barcode-display.has-value {
+    border-color: var(--accent);
+    background: rgba(0,212,255,0.06);
+  }
+  .barcode-display .placeholder {
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
   /* ── 마지막 인식 ── */
   .last-bar { margin: 12px 0 0; padding: 9px 13px; background: rgba(0,255,157,.07); border: 1px solid rgba(0,255,157,.22); border-radius: 9px; display: none; align-items: center; gap: 8px; }
   .last-bar.on { display: flex; }
@@ -164,7 +192,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION v2608031500</span>
+      <span class="logo-main">UNOVISION v2609011158</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -188,7 +216,10 @@
       <!-- + 버튼 → 숫자 키패드 팝업 열기 -->
       <button class="btn-add" onclick="openKeypad()">+</button>
     </div>
-    <div class="input-hint">📡 외장 스캐너로 바코드를 찍으면 자동 인식됩니다</div>
+    <!-- 바코드 표시 영역: 스캔/수동입력된 바코드 번호 표시 -->
+    <div class="barcode-display" id="barcodeDisplay">
+      <span class="placeholder">바코드를 스캔하거나 + 로 입력하세요</span>
+    </div>
     <div class="last-bar" id="lastBar">
       <span class="last-lbl">LAST</span>
       <span class="last-code" id="lastCode">—</span>
@@ -379,13 +410,27 @@ function handleKey(e) {
   }
 }
 
+// ── 바코드 표시 영역 업데이트 ────────────────────────────────────
+function setBarcodeDisplay(code) {
+  const el = document.getElementById('barcodeDisplay');
+  if (code) {
+    el.innerHTML = code;
+    el.classList.add('has-value');
+  } else {
+    el.innerHTML = '<span class="placeholder">바코드를 스캔하거나 + 로 입력하세요</span>';
+    el.classList.remove('has-value');
+  }
+}
+
 // ── 바코드 확정 (HID 스캔 또는 수동 입력 공통) ───────────────────
 function onBarcodeReady(code) {
   const s = (code || '').trim();
   if (!s) return;
 
-  manualInput().value = s;
+  // 바코드 표시 영역 업데이트 (유지)
+  setBarcodeDisplay(s);
   inputBuffer = s;
+  manualInput().value = s;
   document.getElementById('lastCode').textContent = s;
   document.getElementById('lastBar').classList.add('on');
   showToast('✓ 스캔: ' + s);
@@ -432,10 +477,16 @@ function kpConfirm() {
   const code = keypadBuffer.trim();
   closeKeypad();
   if (code) {
-    onBarcodeReady(code);
-    inputBuffer  = '';
+    // 바코드 표시 영역 업데이트 (inputBuffer 유지)
+    setBarcodeDisplay(code);
+    inputBuffer = code;
+    manualInput().value = code;
+    document.getElementById('lastCode').textContent = code;
+    document.getElementById('lastBar').classList.add('on');
+    showToast('✓ 입력: ' + code);
     keypadBuffer = '';
-    manualInput().value = '';
+    // Delphi로 전달: uno://search?바코드
+    window.location = 'uno://search?' + code;
   }
 }
 
@@ -454,6 +505,7 @@ function closeDevModal() { document.getElementById('devModal').classList.remove(
 
 // ── 입고/반품 → Delphi 전달 ──────────────────────────────────────
 // 형식: uno://save?바코드|거래처|매장명|수량|단위
+// 바코드는 barcodeDisplay DOM에서 읽음 (inputBuffer 초기화 무관)
 // Delphi WebBrowser1ShouldStartLoadWithRequest 에서 수신
 function sendToNativeApp(cmd) {
   const partner = document.getElementById('partnerSelect').value;
@@ -461,16 +513,31 @@ function sendToNativeApp(cmd) {
   const qty     = document.getElementById('qtySelect').value;
   const unit    = document.getElementById('unitSelect').value;
 
+  // 바코드: DOM에서 직접 읽기 (가장 신뢰할 수 있는 값)
+  const displayEl = document.getElementById('barcodeDisplay');
+  const barcode   = displayEl.classList.contains('has-value')
+                    ? displayEl.textContent.trim()
+                    : '';
+
+  if (!barcode) {
+    showToast('⚠️ 바코드가 없습니다.', true);
+    return;
+  }
+
   if (!partner || !store) {
     showToast('⚠️ 거래처/매장명을 선택하세요', true);
     return;
   }
 
-  // 바코드: 현재 입력란 값 (없으면 테스트 고정값)
-  const barcode = inputBuffer.trim() || '8809656327866';
-
   window.location = 'uno://' + cmd + '?' +
     barcode + '|' + partner + '|' + store + '|' + qty + '|' + unit;
+
+  // 전송 후 초기화
+  inputBuffer = '';
+  manualInput().value = '';
+  setBarcodeDisplay('');
+  document.getElementById('lastBar').classList.remove('on');
+  document.getElementById('lastCode').textContent = '—';
 }
 
 // ── 초기화 ───────────────────────────────────────────────────────
