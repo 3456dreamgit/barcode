@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>UPv2609081000</title>
+<title>UnoVision Barcode Scanner</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;700&display=swap');
 
@@ -164,7 +164,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UPv2609081000</span>
+      <span class="logo-main">UNOVISION UPv2609081000</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -198,14 +198,12 @@
     <div class="form-grid">
       <div class="form-field">
         <span class="form-label">거래처</span>
-        <!-- URL 파라미터 partners=... 로 동적 생성 -->
         <select class="form-select" id="partnerSelect">
           <option value="">선택하세요</option>
         </select>
       </div>
       <div class="form-field">
         <span class="form-label">매장명</span>
-        <!-- URL 파라미터 stores=... 로 동적 생성 -->
         <select class="form-select" id="storeSelect">
           <option value="">선택하세요</option>
         </select>
@@ -306,6 +304,51 @@
 //   6. 안드로이드 소프트 키보드 차단 (readonly + inputmode=none)
 // ================================================================
 
+
+// ================================================================
+// URL 파라미터
+//   index.html?partners=대한식품,한국유통,서울물류센터&stores=강남점,홍대점,인천점
+//
+// partners / stores가 없으면 기본적으로 "선택하세요"만 표시한다.
+// URLSearchParams가 URL 디코딩을 처리하므로 한글/한글 인코딩 URL 모두 대응한다.
+// ================================================================
+function getUrlList(paramName) {
+  const params = new URLSearchParams(window.location.search);
+  const value = params.get(paramName);
+
+  if (!value) return [];
+
+  return value
+    .split(',')
+    .map(v => v.trim())
+    .filter(v => v.length > 0);
+}
+
+function fillSelect(selectId, values) {
+  const select = document.getElementById(selectId);
+
+  // 기존 항목을 모두 삭제하고 "선택하세요"만 유지
+  select.innerHTML = '<option value="">선택하세요</option>';
+
+  values.forEach(function(value) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = value;
+    select.appendChild(option);
+  });
+
+  // 첫 번째 항목을 자동 선택하지 않고 "선택하세요" 상태로 유지
+  select.value = '';
+}
+
+function applyUrlParameters() {
+  const partners = getUrlList('partners');
+  const stores   = getUrlList('stores');
+
+  fillSelect('partnerSelect', partners);
+  fillSelect('storeSelect', stores);
+}
+
 let inputBuffer  = '';
 let keypadBuffer = '';
 
@@ -324,7 +367,10 @@ function isExemptTarget(el) {
     || el.tagName === 'OPTION';
 }
 
-window.addEventListener('load', focusInput);
+window.addEventListener('load', function() {
+  applyUrlParameters();
+  focusInput();
+});
 document.addEventListener('mousedown',  (e) => { if (!isExemptTarget(e.target)) setTimeout(focusInput, 0); });
 document.addEventListener('touchstart', (e) => { if (!isExemptTarget(e.target)) setTimeout(focusInput, 0); });
 
@@ -449,67 +495,7 @@ function sendToNativeApp(cmd) {
     barcode + '|' + partner + '|' + store + '|' + qty + '|' + unit;
 }
 
-// ── 초기화 ───────────────────────────────────────────────────────
-// ================================================================
-// URL 파라미터로 거래처/매장 콤보박스 동적 생성 (UPv2609081000)
-// ================================================================
-// 호출 예시:
-//   https://서버주소/index.html?partners=대한식품,한국유통,서울물류센터&stores=강남점,홍대점,인천점
-//
-// 파라미터 없이 호출:
-//   https://서버주소/index.html → 콤보박스 비어있는 상태로 표시
-// ================================================================
-function initSelectsFromURL() {
-  // URLSearchParams 대신 직접 파싱 (인코딩 문제 대비)
-  var search = window.location.search || window.location.href.split('?')[1] || '';
-  var partners = '';
-  var stores   = '';
-
-  if (search) {
-    // ? 제거
-    if (search.charAt(0) === '?') search = search.substring(1);
-
-    // & 로 분리
-    search.split('&').forEach(function(pair) {
-      var eq  = pair.indexOf('=');
-      if (eq < 0) return;
-      var key = decodeURIComponent(pair.substring(0, eq)).trim();
-      var val = decodeURIComponent(pair.substring(eq + 1)).trim();
-      if (key === 'partners') partners = val;
-      if (key === 'stores')   stores   = val;
-    });
-  }
-
-  // ── 거래처 콤보박스 채우기
-  const partnerSel = document.getElementById('partnerSelect');
-  if (partners !== '') {
-    partners.split(',').forEach(function(name) {
-      name = name.trim();
-      if (name) {
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        partnerSel.appendChild(opt);
-      }
-    });
-  }
-
-  // ── 매장명 콤보박스 채우기
-  const storeSel = document.getElementById('storeSelect');
-  if (stores !== '') {
-    stores.split(',').forEach(function(name) {
-      name = name.trim();
-      if (name) {
-        const opt = document.createElement('option');
-        opt.value = name;
-        opt.textContent = name;
-        storeSel.appendChild(opt);
-      }
-    });
-  }
-}
-
-initSelectsFromURL();
 focusInput();
+</script>
 </body>
 </html>
