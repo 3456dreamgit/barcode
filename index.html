@@ -141,7 +141,7 @@
 
   /* ── 관리 메뉴 ── */
   .menu-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 13px; margin-bottom: 28px; }
-  .menu-btns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .menu-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .btn-menu { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 16px 6px; background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; color: var(--text); font-family: 'Noto Sans KR', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .15s; }
   .btn-menu:active { transform: scale(.95); border-color: var(--accent); }
   .btn-menu .ic { font-size: 22px; }
@@ -164,7 +164,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION UPv2609081000</span>
+      <span class="logo-main">UNOVISION UPv2609081212</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -213,36 +213,54 @@
         <select class="form-select" id="qtySelect">
           <option value="1">1</option>
           <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
           <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
           <option value="10">10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+          <option value="13">13</option>
+          <option value="14">14</option>
+          <option value="15">15</option>
+          <option value="16">16</option>
+          <option value="17">17</option>
+          <option value="18">18</option>
+          <option value="19">19</option>
           <option value="20">20</option>
-          <option value="50">50</option>
-          <option value="100">100</option>
+          <option value="21">21</option>
+          <option value="22">22</option>
+          <option value="23">23</option>
+          <option value="24">24</option>
+          <option value="25">25</option>
+          <option value="26">26</option>
+          <option value="27">27</option>
+          <option value="28">28</option>
+          <option value="29">29</option>
+          <option value="30">30</option>
         </select>
       </div>
       <div class="form-field">
         <span class="form-label">단위</span>
-        <select class="form-select" id="unitSelect">
+        <select class="form-select" id="unitSelect" disabled>
           <option value="EA">EA (개)</option>
-          <option value="BOX">BOX (박스)</option>
-          <option value="SET">SET (세트)</option>
-          <option value="PACK">PACK (팩)</option>
-          <option value="KG">KG (킬로그램)</option>
         </select>
       </div>
     </div>
     <div class="form-btns">
       <button class="btn-form in"  onclick="sendToNativeApp('save')">📥 입고</button>
-      <button class="btn-form ret" onclick="sendToNativeApp('save')">↩️ 반품</button>
+      <button class="btn-form ret" onclick="sendToNativeApp('return')">↩️ 반품</button>
     </div>
   </div>
 
   <!-- 관리 메뉴 -->
   <div class="menu-section">
     <div class="menu-btns">
-      <button class="btn-menu" onclick="openDevModal()"><span class="ic">📥</span>입고관리</button>
-      <button class="btn-menu" onclick="openDevModal()"><span class="ic">↩️</span>반품관리</button>
-      <button class="btn-menu" onclick="openDevModal()"><span class="ic">📊</span>재고관리</button>
+      <button class="btn-menu" onclick="openDevModal()"><span class="ic">📥</span>입고반품조회</button>
+      <button class="btn-menu" onclick="openDevModal()"><span class="ic">📊</span>재고조회</button>
     </div>
   </div>
 
@@ -299,7 +317,8 @@
 //   1. HID 외장 스캐너 입력 → 바코드 입력란 자동 수신
 //   2. + 버튼 → 숫자 키패드 팝업 → 수동 바코드 입력
 //   3. 바코드 확정 시 → uno://search?바코드 → Delphi 전달
-//   4. 입고/반품 버튼 → uno://save?바코드|거래처|매장명|수량|단위
+//   4. 입고 버튼 → uno://save?바코드|거래처|매장명|수량|단위
+//    반품 버튼 → uno://return?바코드|거래처|매장명|수량|단위
 //   5. 어디를 클릭해도 바코드 입력란에 항상 커서 유지
 //   6. 안드로이드 소프트 키보드 차단 (readonly + inputmode=none)
 // ================================================================
