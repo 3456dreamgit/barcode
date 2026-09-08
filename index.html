@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>UnoVision Barcode Scanner</title>
+<title>UPv2609081000</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;700&display=swap');
 
@@ -164,7 +164,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION v2609011730</span>
+      <span class="logo-main">UPv2609081000</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -198,24 +198,16 @@
     <div class="form-grid">
       <div class="form-field">
         <span class="form-label">거래처</span>
+        <!-- URL 파라미터 partners=... 로 동적 생성 -->
         <select class="form-select" id="partnerSelect">
           <option value="">선택하세요</option>
-          <option value="대한식품">대한식품</option>
-          <option value="한국유통">한국유통</option>
-          <option value="서울물류센터">서울물류센터</option>
-          <option value="동부상사">동부상사</option>
-          <option value="태양물산">태양물산</option>
         </select>
       </div>
       <div class="form-field">
         <span class="form-label">매장명</span>
+        <!-- URL 파라미터 stores=... 로 동적 생성 -->
         <select class="form-select" id="storeSelect">
           <option value="">선택하세요</option>
-          <option value="강남점">강남점</option>
-          <option value="홍대점">홍대점</option>
-          <option value="인천점">인천점</option>
-          <option value="송도점">송도점</option>
-          <option value="본점창고">본점창고</option>
         </select>
       </div>
       <div class="form-field">
@@ -457,7 +449,51 @@ function sendToNativeApp(cmd) {
     barcode + '|' + partner + '|' + store + '|' + qty + '|' + unit;
 }
 
+// ── 초기화 ───────────────────────────────────────────────────────
+// ================================================================
+// URL 파라미터로 거래처/매장 콤보박스 동적 생성 (UPv2609081000)
+// ================================================================
+// 호출 예시:
+//   https://서버주소/index.html?partners=대한식품,한국유통,서울물류센터&stores=강남점,홍대점,인천점
+//
+// 파라미터 없이 호출:
+//   https://서버주소/index.html → 콤보박스 비어있는 상태로 표시
+// ================================================================
+function initSelectsFromURL() {
+  const params   = new URLSearchParams(window.location.search);
+  const partners = params.get('partners');
+  const stores   = params.get('stores');
+
+  // ── 거래처 콤보박스 채우기
+  const partnerSel = document.getElementById('partnerSelect');
+  if (partners && partners.trim() !== '') {
+    partners.split(',').forEach(function(name) {
+      name = name.trim();
+      if (name) {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        partnerSel.appendChild(opt);
+      }
+    });
+  }
+
+  // ── 매장명 콤보박스 채우기
+  const storeSel = document.getElementById('storeSelect');
+  if (stores && stores.trim() !== '') {
+    stores.split(',').forEach(function(name) {
+      name = name.trim();
+      if (name) {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        storeSel.appendChild(opt);
+      }
+    });
+  }
+}
+
+initSelectsFromURL();
 focusInput();
-</script>
 </body>
 </html>
