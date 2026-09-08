@@ -460,13 +460,29 @@ function sendToNativeApp(cmd) {
 //   https://서버주소/index.html → 콤보박스 비어있는 상태로 표시
 // ================================================================
 function initSelectsFromURL() {
-  const params   = new URLSearchParams(window.location.search);
-  const partners = params.get('partners');
-  const stores   = params.get('stores');
+  // URLSearchParams 대신 직접 파싱 (인코딩 문제 대비)
+  var search = window.location.search || window.location.href.split('?')[1] || '';
+  var partners = '';
+  var stores   = '';
+
+  if (search) {
+    // ? 제거
+    if (search.charAt(0) === '?') search = search.substring(1);
+
+    // & 로 분리
+    search.split('&').forEach(function(pair) {
+      var eq  = pair.indexOf('=');
+      if (eq < 0) return;
+      var key = decodeURIComponent(pair.substring(0, eq)).trim();
+      var val = decodeURIComponent(pair.substring(eq + 1)).trim();
+      if (key === 'partners') partners = val;
+      if (key === 'stores')   stores   = val;
+    });
+  }
 
   // ── 거래처 콤보박스 채우기
   const partnerSel = document.getElementById('partnerSelect');
-  if (partners && partners.trim() !== '') {
+  if (partners !== '') {
     partners.split(',').forEach(function(name) {
       name = name.trim();
       if (name) {
@@ -480,7 +496,7 @@ function initSelectsFromURL() {
 
   // ── 매장명 콤보박스 채우기
   const storeSel = document.getElementById('storeSelect');
-  if (stores && stores.trim() !== '') {
+  if (stores !== '') {
     stores.split(',').forEach(function(name) {
       name = name.trim();
       if (name) {
