@@ -164,7 +164,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION UPv2609081212</span>
+      <span class="logo-main">UNOVISION UPv2609151600</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -259,8 +259,8 @@
   <!-- 관리 메뉴 -->
   <div class="menu-section">
     <div class="menu-btns">
-      <button class="btn-menu" onclick="openDevModal()"><span class="ic">📥</span>입고반품조회</button>
-      <button class="btn-menu" onclick="openDevModal()"><span class="ic">📊</span>재고조회</button>
+      <button class="btn-menu" onclick="getGoodsInHistory()"><span class="ic">📥</span>입고반품조회</button>
+      <button class="btn-menu" onclick="getGoodsStockCheck()"><span class="ic">📊</span>재고조회</button>
     </div>
   </div>
 
@@ -311,7 +311,7 @@
 
 <script>
 // ================================================================
-// UNOVISION v2608031500
+// UNOVISION UPv2609151433
 // ================================================================
 // 주요 기능:
 //   1. HID 외장 스캐너 입력 → 바코드 입력란 자동 수신
@@ -492,6 +492,14 @@ function showToast(msg, isDup = false) {
   t.className = 'toast show' + (isDup ? ' dup' : '');
   clearTimeout(t._t);
   t._t = setTimeout(() => t.className = 'toast', 2200);
+}
+
+function getGoodsInHistory() {
+  window.location = 'uno://History?123456789012';
+}
+
+function getGoodsStockCheck() {
+  window.location = 'uno://Stock?123456789012';
 }
 
 function openDevModal()  { document.getElementById('devModal').classList.add('show'); }
