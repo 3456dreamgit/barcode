@@ -164,7 +164,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION UPv2609151433</span>
+      <span class="logo-main">UNOVISION UPv2609151450</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -260,7 +260,7 @@
   <div class="menu-section">
     <div class="menu-btns">
       <button class="btn-menu" onclick="getGoodsInHistory()"><span class="ic">📥</span>입고반품조회</button>
-      <button class="btn-menu" onclick="openDevModal()"><span class="ic">📊</span>재고조회</button>
+      <button class="btn-menu" onclick="getGoodsStockCheck()"><span class="ic">📊</span>재고조회</button>
     </div>
   </div>
 
@@ -495,15 +495,11 @@ function showToast(msg, isDup = false) {
 }
 
 function getGoodsInHistory() {
-  const barcode = inputBuffer.trim();
+  window.location = 'uno://getGoodsInHistory?123456789012';
+}
 
-  if (!barcode) {
-    showToast('⚠️ 바코드를 입력하세요', true);
-    focusInput();
-    return;
-  }
-
-  window.location = 'uno://getGoodsInHistory?' + barcode;
+function getGoodsStockCheck() {
+  window.location = 'uno://getGoodsStockCheck?123456789012';
 }
 
 function openDevModal()  { document.getElementById('devModal').classList.add('show'); }
