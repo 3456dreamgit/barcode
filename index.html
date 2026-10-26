@@ -164,7 +164,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION UPv2609211510</span>
+      <span class="logo-main">UNOVISION UPv2610261300</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -182,8 +182,7 @@
     <div class="input-row">
       <input class="barcode-input" id="manualInput" type="text"
         inputmode="none" autocomplete="off" autocorrect="off" spellcheck="false"
-        readonly
-        onkeydown="handleKey(event)">
+        onkeydown="handleKey(event)" oninput="handleBarcodeInput(event)">
       <button class="btn-add" onclick="openKeypad()">+</button>
     </div>
     <div class="input-hint">📡 외장 스캐너로 바코드를 찍으면 자동 인식됩니다</div>
@@ -477,25 +476,27 @@ setInterval(() => {
   if (!anyOpen && !isExemptTarget(document.activeElement)) focusInput();
 }, 800);
 
+// Keyboard Wedge 및 IME의 실제 입력값을 함께 처리한다.
+// PDA가 Intent/Broadcast 전용이면 네이티브 앱에서 별도 전달해야 한다.
+let scanComposing = false;
+function handleBarcodeInput(e) {
+  if (scanComposing || e.isComposing) return;
+  inputBuffer = manualInput().value.replace(/[\r\n]+$/g, '');
+}
+manualInput().addEventListener('compositionstart', () => { scanComposing = true; });
+manualInput().addEventListener('compositionend', () => {
+  scanComposing = false;
+  inputBuffer = manualInput().value;
+});
 function handleKey(e) {
-  if (e.key === 'Enter') {
+  if (e.key === 'Enter' || e.key === 'Tab') {
     e.preventDefault();
-    if (inputBuffer.trim()) {
-      onBarcodeReady(inputBuffer);
-      inputBuffer = '';
-      manualInput().value = '';
-    }
+    const code = manualInput().value.trim() || inputBuffer.trim();
+    if (code) onBarcodeReady(code);
     return;
   }
-  if (e.key.length === 1) {
-    e.preventDefault();
-    inputBuffer += e.key;
-    manualInput().value = inputBuffer;
-  } else if (e.key === 'Backspace') {
-    e.preventDefault();
-    inputBuffer = inputBuffer.slice(0, -1);
-    manualInput().value = inputBuffer;
-  }
+  // readonly를 제거하여 PDA의 키보드/IME가 직접 값을 넣도록 한다.
+  // 입력 데이터는 input 이벤트에서 읽고 keydown에서 중복 누적하지 않는다.
 }
 
 function onBarcodeReady(code) {
@@ -550,9 +551,8 @@ function kpConfirm() {
   closeKeypad();
   if (code) {
     onBarcodeReady(code);
-    inputBuffer  = '';
+    inputBuffer  = code;
     keypadBuffer = '';
-    manualInput().value = '';
   }
 }
 
