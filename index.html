@@ -81,11 +81,6 @@
   .btn-add { background: var(--accent2); border: none; border-radius: 10px; color: var(--bg); font-weight: 700; font-size: 22px; width: 46px; cursor: pointer; transition: all .15s; }
   .btn-add:active { transform: scale(.9); }
 
-  /* ── 마지막 인식 ── */
-  .last-bar { margin: 12px 0 0; padding: 9px 13px; background: rgba(0,255,157,.07); border: 1px solid rgba(0,255,157,.22); border-radius: 9px; display: none; align-items: center; gap: 8px; }
-  .last-bar.on { display: flex; }
-  .last-lbl { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--accent2); white-space: nowrap; text-transform: uppercase; }
-  .last-code { flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text); word-break: break-all; }
 
   /* ── 숫자 키패드 모달 ── */
   .keypad-backdrop {
@@ -164,7 +159,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION UPv2610261300</span>
+      <span class="logo-main">UNOVISION UPv2610270945</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -186,10 +181,6 @@
       <button class="btn-add" onclick="openKeypad()">+</button>
     </div>
     <div class="input-hint">📡 외장 스캐너로 바코드를 찍으면 자동 인식됩니다</div>
-    <div class="last-bar" id="lastBar">
-      <span class="last-lbl">LAST</span>
-      <span class="last-code" id="lastCode">—</span>
-    </div>
   </div>
 
   <!-- 거래처/매장/수량/단위 -->
@@ -380,7 +371,7 @@
 
 <script>
 // ================================================================
-// UNOVISION UPv2609151433
+// UNOVISION UPv2610270945
 // ================================================================
 // 주요 기능:
 //   1. HID 외장 스캐너 입력 → 바코드 입력란 자동 수신
@@ -505,8 +496,6 @@ function onBarcodeReady(code) {
 
   manualInput().value = s;
   inputBuffer = s;
-  document.getElementById('lastCode').textContent = s;
-  document.getElementById('lastBar').classList.add('on');
   showToast('✓ 스캔: ' + s);
   if (navigator.vibrate) navigator.vibrate([60, 30, 60]);
 
