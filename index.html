@@ -159,7 +159,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION UPv2610270945</span>
+      <span class="logo-main">UNOVISION UPv202610271001</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -371,7 +371,7 @@
 
 <script>
 // ================================================================
-// UNOVISION UPv2610270945
+// UNOVISION UPv202610271001
 // ================================================================
 // 주요 기능:
 //   1. HID 외장 스캐너 입력 → 바코드 입력란 자동 수신
@@ -433,39 +433,64 @@ let keypadBuffer = '';
 
 const manualInput = () => document.getElementById('manualInput');
 
+// 바코드 입력란 포커스 복귀: 선택 메뉴가 열려 있는 동안에는 강제로 빼앗지 않는다.
+let selectInUse = false;
+
+function isModalOpen() {
+  return document.getElementById('devModal').classList.contains('show')
+      || document.getElementById('keypadModal').classList.contains('show');
+}
+
 function focusInput() {
+  if (isModalOpen() || selectInUse) return;
   const el = manualInput();
   if (document.activeElement !== el) el.focus({ preventScroll: true });
 }
 
-function isExemptTarget(el) {
-  return el.id === 'manualInput'
-    || el.tagName === 'BUTTON'
-    || el.tagName === 'INPUT'
-    || el.tagName === 'SELECT'
-    || el.tagName === 'OPTION';
+function scheduleFocus(delay = 100) {
+  setTimeout(focusInput, delay);
 }
 
 window.addEventListener('load', function() {
   applyUrlParameters();
-  focusInput();
-});
-document.addEventListener('mousedown',  (e) => { if (!isExemptTarget(e.target)) setTimeout(focusInput, 0); });
-document.addEventListener('touchstart', (e) => { if (!isExemptTarget(e.target)) setTimeout(focusInput, 0); });
-
-manualInput().addEventListener('blur', () => {
-  const anyOpen = document.getElementById('devModal').classList.contains('show')
-               || document.getElementById('keypadModal').classList.contains('show');
-  setTimeout(() => {
-    if (!anyOpen && !isExemptTarget(document.activeElement)) focusInput();
-  }, 10);
+  scheduleFocus(0);
 });
 
-setInterval(() => {
-  const anyOpen = document.getElementById('devModal').classList.contains('show')
-               || document.getElementById('keypadModal').classList.contains('show');
-  if (!anyOpen && !isExemptTarget(document.activeElement)) focusInput();
-}, 800);
+// 거래처/매장/수량 선택이 끝나면 입력란으로 돌아온다.
+// 선택 메뉴가 열린 상태에서는 바코드 입력란이 포커스를 빼앗지 않는다.
+document.querySelectorAll('select').forEach((select) => {
+  select.addEventListener('focus', () => { selectInUse = true; });
+  select.addEventListener('change', () => {
+    selectInUse = false;
+    scheduleFocus(150);
+  });
+  select.addEventListener('blur', () => {
+    selectInUse = false;
+    scheduleFocus(60);
+  });
+});
+
+// 조회/입고/반품 버튼 등의 클릭 처리가 끝난 후 입력란에 포커스를 복귀한다.
+// 키패드 모달이 열려 있으면 focusInput()이 자동으로 복귀를 보류한다.
+document.addEventListener('click', (event) => {
+  const target = event.target;
+  if (target.closest('button')) {
+    scheduleFocus(120);
+  } else if (!target.closest('select') && target !== manualInput()) {
+    scheduleFocus(50);
+  }
+});
+
+// Android 네이티브 서브화면에서 되돌아올 때 발생 가능한 복귀 이벤트 대응.
+window.addEventListener('focus', () => scheduleFocus(120));
+window.addEventListener('pageshow', () => scheduleFocus(120));
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) scheduleFocus(120);
+});
+
+// 포커스가 다른 일반 요소로 옮겨진 경우를 위한 보조 복귀 처리.
+// 드롭다운이 열려 있거나 키패드 모달이 표시 중이면 실행하지 않는다.
+setInterval(focusInput, 800);
 
 // Keyboard Wedge 및 IME의 실제 입력값을 함께 처리한다.
 // PDA가 Intent/Broadcast 전용이면 네이티브 앱에서 별도 전달해야 한다.
@@ -490,16 +515,23 @@ function handleKey(e) {
   // 입력 데이터는 input 이벤트에서 읽고 keydown에서 중복 누적하지 않는다.
 }
 
-function onBarcodeReady(code) {
+function onBarcodeReady(code, vibrateOnScan = true) {
   const s = (code || '').trim();
   if (!s) return;
 
   manualInput().value = s;
   inputBuffer = s;
   showToast('✓ 스캔: ' + s);
-  if (navigator.vibrate) navigator.vibrate([60, 30, 60]);
+  if (vibrateOnScan && navigator.vibrate) navigator.vibrate([60, 30, 60]);
 
   window.location = 'uno://search?' + s;
+}
+
+// 숫자 키패드용 짧은 진동 (Android WebView에서 지원하는 경우)
+function vibrateKeypad(duration = 40) {
+  if (typeof navigator.vibrate === 'function') {
+    try { navigator.vibrate(duration); } catch (e) { /* 진동 미지원 기기 */ }
+  }
 }
 
 function openKeypad() {
@@ -508,7 +540,8 @@ function openKeypad() {
   document.getElementById('keypadModal').classList.add('show');
 }
 
-function closeKeypad() {
+function closeKeypad(withVibration = true) {
+  if (withVibration) vibrateKeypad(25);
   document.getElementById('keypadModal').classList.remove('show');
   focusInput();
 }
@@ -518,10 +551,11 @@ function kpInput(num) {
   document.getElementById('keypadPreview').textContent = keypadBuffer || '—';
   manualInput().value = keypadBuffer;
   inputBuffer = keypadBuffer;
-  if (navigator.vibrate) navigator.vibrate(40);  // 키패드 숫자 클릭 시 진동
+  vibrateKeypad(40);  // 숫자 입력 진동
 }
 
 function kpDelete() {
+  vibrateKeypad(40);
   keypadBuffer = keypadBuffer.slice(0, -1);
   document.getElementById('keypadPreview').textContent = keypadBuffer || '—';
   manualInput().value = keypadBuffer;
@@ -529,6 +563,7 @@ function kpDelete() {
 }
 
 function kpClear() {
+  vibrateKeypad(40);
   keypadBuffer = '';
   document.getElementById('keypadPreview').textContent = '—';
   manualInput().value = '';
@@ -536,10 +571,11 @@ function kpClear() {
 }
 
 function kpConfirm() {
+  vibrateKeypad(40);
   const code = keypadBuffer.trim();
-  closeKeypad();
+  closeKeypad(false);
   if (code) {
-    onBarcodeReady(code);
+    onBarcodeReady(code, false);
     inputBuffer  = code;
     keypadBuffer = '';
   }
