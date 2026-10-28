@@ -159,7 +159,7 @@
   <div class="logo">
     <div class="logo-icon">🔍</div>
     <div class="logo-text">
-      <span class="logo-main">UNOVISION UPv202610271001</span>
+      <span class="logo-main">UNOVISION UPv202610281505</span>
       <span class="logo-sub">Barcode Scanner</span>
     </div>
   </div>
@@ -371,7 +371,7 @@
 
 <script>
 // ================================================================
-// UNOVISION UPv202610271001
+// UNOVISION UPv202610281505
 // ================================================================
 // 주요 기능:
 //   1. HID 외장 스캐너 입력 → 바코드 입력란 자동 수신
@@ -456,12 +456,31 @@ window.addEventListener('load', function() {
   scheduleFocus(0);
 });
 
+// 거래처/매장 선택 시 '텍스트/코드'의 마지막 '/' 뒤 코드만 Kotlin에 보냅니다.
+// 선택 해제 시 빈 코드로 알려 상단에 '미선택'을 표시합니다.
+function sendSelectedCodeToApp(select) {
+  const command = select.id === 'partnerSelect' ? 'deal'
+                : select.id === 'storeSelect' ? 'store' : '';
+  if (!command) return;
+
+  const selectedOption = select.options[select.selectedIndex];
+  const selectedText = selectedOption ? selectedOption.textContent.trim() : '';
+  const slashPos = selectedText.lastIndexOf('/');
+  const code = selectedText && slashPos >= 0
+    ? selectedText.slice(slashPos + 1).trim() : '';
+  if (select.value && !code) {
+    showToast('⚠️ 선택 항목의 코드가 없습니다', true);
+  }
+  window.location = 'uno://' + command + '?' + encodeURIComponent(code);
+}
+
 // 거래처/매장/수량 선택이 끝나면 입력란으로 돌아온다.
 // 선택 메뉴가 열린 상태에서는 바코드 입력란이 포커스를 빼앗지 않는다.
 document.querySelectorAll('select').forEach((select) => {
   select.addEventListener('focus', () => { selectInUse = true; });
   select.addEventListener('change', () => {
     selectInUse = false;
+    sendSelectedCodeToApp(select);
     scheduleFocus(150);
   });
   select.addEventListener('blur', () => {
